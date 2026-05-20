@@ -123,7 +123,7 @@ export default function Home() {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-24 timeline-section" style={{ position: 'relative', overflow: 'hidden', borderBottom: '1px solid var(--divider-color)' }}>
+      <section className="py-24 timeline-section" style={{ position: 'relative', overflow: 'hidden' }}>
         <div className="ambient-blob" style={{ top: '30%', left: '50%', transform: 'translate(-50%, -50%)', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(0,120,255,0.05) 0%, transparent 60%)', filter: 'blur(100px)' }}></div>
         <div className="container" style={{ position: 'relative', zIndex: 1 }}>
           <div className="text-center">
@@ -279,7 +279,7 @@ export default function Home() {
       </section>
 
       {/* National Leaderboard Section */}
-      <section id="leaderboard" className="py-24" style={{ borderTop: '1px solid var(--divider-color)', borderBottom: '1px solid var(--divider-color)', position: 'relative' }}>
+      <section id="leaderboard" className="py-24" style={{ position: 'relative' }}>
         <div className="container">
           <div className="text-center">
             <span className="feature-tag" style={{ display: 'inline-block', marginBottom: '16px' }}>National Leaderboard</span>
@@ -400,7 +400,7 @@ export default function Home() {
       </section>
 
       {/* Security Section */}
-      <section className="py-24" style={{ backgroundColor: 'var(--bg-secondary)', borderTop: '1px solid var(--divider-color)', borderBottom: '1px solid var(--divider-color)' }}>
+      <section className="py-24">
         <div className="container text-center">
           <Shield size={48} color="var(--chart-blue)" style={{ margin: '0 auto 24px' }} />
           <h2 className="section-title">Strict Privacy & DPDP Compliance</h2>
