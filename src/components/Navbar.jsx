@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { Pill } from 'lucide-react';
 
 export default function Navbar() {
   return (

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Pill, Check, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Check, ArrowLeft, ArrowRight } from 'lucide-react';
 
 export default function Signup() {
   const [odsCode, setOdsCode] = useState('');
@@ -15,7 +15,7 @@ export default function Signup() {
 
   const navigate = useNavigate();
 
-  // Simulate auto-filling pharmacy name for Indian stores (e.g. from GSTIN or Drug License code)
+  // Simulate auto-filling pharmacy name for UK stores (e.g. from ODS or NHS Contract code)
   const handleOdsChange = (e) => {
     const val = e.target.value;
     setOdsCode(val);
@@ -26,12 +26,12 @@ export default function Signup() {
       const timer = setTimeout(() => {
         if (!pharmacyName) {
           const upperVal = val.toUpperCase();
-          if (upperVal.startsWith('27') || upperVal.includes('MH') || upperVal.includes('MUM')) {
-            setPharmacyName('Krishna Medicos, Andheri West, Mumbai');
-          } else if (upperVal.startsWith('07') || upperVal.includes('DL') || upperVal.includes('DEL')) {
-            setPharmacyName('Apollo Pharmacy, Connaught Place, New Delhi');
+          if (upperVal.startsWith('F') || upperVal.includes('LON')) {
+            setPharmacyName('Smiths Pharmacy, London');
+          } else if (upperVal.startsWith('M') || upperVal.includes('MAN')) {
+            setPharmacyName('Alliance Pharmacy, Manchester');
           } else {
-            setPharmacyName('Radha Medical & General Stores, Bengaluru');
+            setPharmacyName('Boots Pharmacy, Birmingham');
           }
         }
         setIsSearching(false);
@@ -58,19 +58,27 @@ export default function Signup() {
     if (!isFormValid) return;
 
     try {
-      // Map pharmacyName to database 'name' field
-      const response = await fetch('http://localhost:5000/api/signup', {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${API_URL}/api/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: pharmacyName,
+          name: `${firstName} ${lastName}`,
           email,
-          password
+          password,
+          pharmacy_name: pharmacyName,
+          ods_code: odsCode,
+          nhs_contract: ''
         })
       });
       const data = await response.json();
       if (response.ok) {
         console.log('Signed up successfully', data);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('pharmadash_user_name', data.user.name || '');
+        localStorage.setItem('pharmadash_pharmacy_name', data.user.pharmacy_name || '');
+        localStorage.setItem('pharmadash_ods_code', data.user.ods_code || '');
+        localStorage.setItem('pharmadash_nhs_contract', data.user.nhs_contract || '');
         navigate('/dashboard');
       } else {
         alert('Signup failed: ' + data.error);
@@ -105,7 +113,7 @@ export default function Signup() {
 
           {/* Classic Subtitle / Quote */}
           <p className="left-panel-desc" style={{ fontStyle: 'italic', fontSize: '19px', color: 'rgba(255, 255, 255, 0.8)', borderLeft: '2px solid #38bdf8', paddingLeft: '20px', lineHeight: '1.6' }}>
-            "DashRx represents the intersection of elegant design and uncompromising data precision, tailored exclusively for the sophisticated Indian pharmacy owner."
+            "DashRx represents the intersection of elegant design and uncompromising data precision, tailored exclusively for the sophisticated UK NHS pharmacy owner."
           </p>
         </div>
       </div>
@@ -138,21 +146,21 @@ export default function Signup() {
             {/* ODS / GSTIN Search */}
             <div className="signup-input-group">
               <label className="signup-label">
-                GSTIN or Drug License Number <span>(Search your pharmacy)</span>
+                ODS Code or NHS Contract Number <span>(Search your pharmacy)</span>
               </label>
               <input
                 type="text"
                 value={odsCode}
                 onChange={handleOdsChange}
                 className="signup-input"
-                placeholder="E.G. 27AAAAA1111A1Z1 OR DL-12345"
+                placeholder="E.G. FLF77 OR NHS-12345"
                 style={{ textTransform: 'uppercase' }}
               />
               <p className="signup-helper-text">
                 {isSearching ? (
                   <span style={{ color: 'var(--accent-color)', fontWeight: 'bold' }}>Searching databases and auto-filling details...</span>
                 ) : (
-                  'Enter your GSTIN/DL number and we\'ll auto-fill your pharmacy details'
+                  'Enter your ODS Code and we\'ll auto-fill your pharmacy details'
                 )}
               </p>
             </div>
@@ -166,7 +174,7 @@ export default function Signup() {
                 onChange={(e) => setPharmacyName(e.target.value)}
                 required
                 className="signup-input"
-                placeholder="e.g. Krishna Medicos, Mumbai"
+                placeholder="e.g. Smiths Pharmacy, London"
               />
             </div>
 
@@ -180,7 +188,7 @@ export default function Signup() {
                   onChange={(e) => setFirstName(e.target.value)}
                   required
                   className="signup-input"
-                  placeholder="Rahul"
+                  placeholder="John"
                 />
               </div>
               <div className="signup-input-group">
@@ -191,7 +199,7 @@ export default function Signup() {
                   onChange={(e) => setLastName(e.target.value)}
                   required
                   className="signup-input"
-                  placeholder="Sharma"
+                  placeholder="Smith"
                 />
               </div>
             </div>
@@ -205,7 +213,7 @@ export default function Signup() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="signup-input"
-                placeholder="you@yourpharmacy.in"
+                placeholder="you@yourpharmacy.co.uk"
               />
             </div>
 

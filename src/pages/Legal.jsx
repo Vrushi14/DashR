@@ -80,13 +80,13 @@ export default function Legal() {
               <p style={{ color: 'var(--text-muted)', fontSize: '14.5px', marginBottom: '24px' }}>Last Updated: May 20, 2026</p>
               
               <h3 style={{ fontSize: '18px', fontWeight: 800, marginTop: '24px' }}>1. Data Protection Compliance</h3>
-              <p>DashRx is fully compliant with the Digital Personal Data Protection (DPDP) Act of India. We process sensitive commercial data including pharmacy purchase statements, GST numbers, and stockist transaction registries solely to generate leakage audits.</p>
+              <p>DashRx is fully compliant with the UK General Data Protection Regulation (UK GDPR) and the Data Protection Act 2018. We process sensitive commercial data including pharmacy purchase statements, ODS codes, and NHS supplier transaction records solely to generate leakage audits and improve pharmacy operations.</p>
               
               <h3 style={{ fontSize: '18px', fontWeight: 800, marginTop: '24px' }}>2. Document Uploads & OCR Parsing</h3>
-              <p>When you upload distributor bills (PDF, JPEG, PNG, or CSV formats), the scanning process parses purchase prices, discounts, and tax slabs. This raw data is encrypted at rest using AES-256 and is never shared, distributed, or exposed to third parties.</p>
+              <p>When you upload distributor bills (PDF, JPEG, PNG, or CSV formats), the scanning process parses purchase prices, discounts, and VAT slabs. This raw data is encrypted at rest using AES-256 and is never shared, distributed, or exposed to third parties.</p>
 
               <h3 style={{ fontSize: '18px', fontWeight: 800, marginTop: '24px' }}>3. Peer Benchmarking Anonymity</h3>
-              <p>Our Competitive Benchmarking database aggregates gross margins and OTC ratios anonymously. Your individual store name, exact location coordinates, or individual stockist rates are never exposed. Other pharmacies see only broad district averages.</p>
+              <p>Our Competitive Benchmarking database aggregates gross margins and OTC ratios anonymously. Your individual pharmacy name, exact location coordinates, or individual supplier rates are never exposed. Other pharmacies see only broad regional averages.</p>
             </div>
           )}
 
@@ -99,13 +99,13 @@ export default function Legal() {
               <p style={{ color: 'var(--text-muted)', fontSize: '14.5px', marginBottom: '24px' }}>Last Updated: May 20, 2026</p>
 
               <h3 style={{ fontSize: '18px', fontWeight: 800, marginTop: '24px' }}>1. Licence to Use</h3>
-              <p>DashRx grants pharmacy owners and managers a limited, non-exclusive license to use the analytics portal for operational audits. Any commercial reselling of national leaderboard details or local drug trend data is strictly prohibited.</p>
+              <p>DashRx grants pharmacy owners and managers a limited, non-exclusive license to use the analytics portal for operational audits. Any commercial reselling of national leaderboard details or local NHS dispensing trend data is strictly prohibited.</p>
 
               <h3 style={{ fontSize: '18px', fontWeight: 800, marginTop: '24px' }}>2. Subscriptions & Refunds</h3>
-              <p>DashRx Pro Growth plans are billed monthly or annually as selected. Subscriptions can be canceled at any time. GST invoices are generated automatically at the end of each billing cycle.</p>
+              <p>DashRx Pro Growth plans are billed monthly or annually as selected. Subscriptions can be canceled at any time. VAT invoices compliant with HMRC requirements are generated automatically at the end of each billing cycle.</p>
 
-              <h3 style={{ fontSize: '18px', fontWeight: 800, marginTop: '24px' }}>3. Disclaimer of Tax Filings</h3>
-              <p>While the GST audit tab reconciles input tax credit mismatch gaps, the output is for advisory purposes. Pharmacy owners must consult certified chartered accountants or tax professionals before submitting actual GSTR-1 or GSTR-3B filings.</p>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, marginTop: '24px' }}>3. Disclaimer of Tax & VAT Filings</h3>
+              <p>While the VAT reconciliation tab identifies input VAT discrepancies between your supplier invoices and NHSBSA FP34 records, the output is for advisory purposes only. Pharmacy owners must consult certified accountants or tax professionals before submitting actual VAT returns to HMRC.</p>
             </div>
           )}
 

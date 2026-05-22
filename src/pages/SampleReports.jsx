@@ -73,11 +73,12 @@ export default function SampleReports() {
 
   const samplePricingReport = `
     <h1>[SAMPLE] DashRx Purchase Invoice Pricing Discrepancies</h1>
-    <p><strong>Pharmacy Entity :</strong> Sample Pharmacy Medicos</p>
-    <p><strong>Analysis Period   :</strong> May 2026 Audit</p>
-    <p><strong>Total Leakage    :</strong> ₹11,250</p>
+    <p><strong>Pharmacy Entity :</strong> Sample Pharmacy, London</p>
+    <p><strong>ODS Code        :</strong> FLF77</p>
+    <p><strong>Analysis Period  :</strong> May 2026 Audit</p>
+    <p><strong>Total Leakage   :</strong> £112.40</p>
     
-    <h2>Reconciled Stockist Invoices</h2>
+    <h2>Reconciled Supplier Invoices</h2>
     <table>
       <thead>
         <tr>
@@ -91,58 +92,59 @@ export default function SampleReports() {
       </thead>
       <tbody>
         <tr>
-          <td>Keimed Distributors</td>
-          <td>KM-49021</td>
-          <td>₹115.00</td>
-          <td>₹105.00</td>
-          <td>+₹10.00</td>
-          <td class="highlight">₹1,200</td>
+          <td>Alliance Healthcare</td>
+          <td>ALL/LON/9482</td>
+          <td>£12.40</td>
+          <td>£11.20</td>
+          <td>+£1.20</td>
+          <td class="highlight">£72.00</td>
         </tr>
         <tr>
-          <td>PharmEasy B2B Portal</td>
-          <td>PE-82910</td>
-          <td>₹98.00</td>
-          <td>₹88.20</td>
-          <td>+₹9.80</td>
-          <td class="highlight">₹1,470</td>
+          <td>AAH Pharmaceuticals</td>
+          <td>AAH/DIS/40291</td>
+          <td>£9.80</td>
+          <td>£9.14</td>
+          <td>+£0.66</td>
+          <td class="highlight">£40.40</td>
         </tr>
       </tbody>
     </table>
   `;
 
   const sampleGstReport = `
-    <h1>[SAMPLE] DashRx GSTR-2B Input Tax Credit (ITC) Report</h1>
-    <p><strong>GSTIN Ref       :</strong> 27SAMPLE1111A1Z1</p>
+    <h1>[SAMPLE] DashRx FP34 VAT Reconciliation Report</h1>
+    <p><strong>ODS Code        :</strong> FLF77</p>
+    <p><strong>Pharmacy        :</strong> Sample Pharmacy, London</p>
     <p><strong>Report Period   :</strong> Q1 2026 Summary</p>
     
-    <h2>ITC Reconciliation Ledger</h2>
+    <h2>VAT Input Reconciliation Ledger</h2>
     <table>
       <thead>
         <tr>
-          <th>Tax Slab</th>
+          <th>VAT Rate</th>
           <th>Audited Purchases</th>
-          <th>Billed Invoice GST</th>
-          <th>Portal Matched GST</th>
-          <th>Eligible Input Credit</th>
+          <th>Billed Invoice VAT</th>
+          <th>NHSBSA Matched VAT</th>
+          <th>Eligible Input VAT</th>
           <th>Discrepancy Gap</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td>GST @ 5%</td>
-          <td>₹80,880</td>
-          <td>₹4,044</td>
-          <td>₹4,044</td>
-          <td>₹4,044</td>
-          <td>₹0</td>
+          <td>VAT @ 5%</td>
+          <td>£8,088</td>
+          <td>£404</td>
+          <td>£404</td>
+          <td>£404</td>
+          <td>£0</td>
         </tr>
         <tr>
-          <td>GST @ 12%</td>
-          <td>₹3,29,710</td>
-          <td>₹39,565</td>
-          <td>₹36,445</td>
-          <td>₹36,445</td>
-          <td class="highlight">₹3,120</td>
+          <td>VAT @ 20%</td>
+          <td>£32,971</td>
+          <td>£6,594</td>
+          <td>£6,282</td>
+          <td>£6,282</td>
+          <td class="highlight">£312</td>
         </tr>
       </tbody>
     </table>
@@ -191,16 +193,16 @@ export default function SampleReports() {
               <div style={{ color: '#0078FF', marginBottom: '12px' }}>
                 <Percent size={32} />
               </div>
-              <h3 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 8px 0' }}>GSTR-2B Input Tax Credit (ITC) Report</h3>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 8px 0' }}>FP34 VAT Reconciliation Report</h3>
               <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-muted)', lineHeight: '1.5' }}>
-                Reconciliation summaries comparing physical purchase invoice GST charges against GSTR-2B portal entries. Highlights credit matches, blocked ITC rules, and filing discrepancies.
+                Reconciliation summaries comparing purchase invoice VAT charges against NHSBSA FP34 Schedule of Payments. Highlights VAT rate matches, unreclaimed input VAT, and FP34 processing discrepancies.
               </p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '200px' }}>
-              <button className="btn btn-primary" style={{ padding: '10px 18px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }} onClick={() => downloadDoc('DashRx_Sample_GST_Audit.doc', sampleGstReport)}>
+              <button className="btn btn-primary" style={{ padding: '10px 18px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }} onClick={() => downloadDoc('DashRx_Sample_VAT_FP34_Audit.doc', sampleGstReport)}>
                 <Download size={14} /> Download .DOC
               </button>
-              <button className="btn btn-secondary" style={{ padding: '10px 18px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }} onClick={() => printToPDF('Sample GSTR-2B Audit', sampleGstReport)}>
+              <button className="btn btn-secondary" style={{ padding: '10px 18px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }} onClick={() => printToPDF('Sample FP34 VAT Audit', sampleGstReport)}>
                 <Download size={14} /> Download .PDF
               </button>
             </div>

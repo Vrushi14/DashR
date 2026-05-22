@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { Pill } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -11,7 +10,7 @@ export default function Footer() {
               <img src="/DashRx.png" alt="DashRx" style={{ height: '110px', objectFit: 'contain' }} />
             </Link>
             <p style={{ color: 'var(--text-muted)', fontSize: '13.5px', lineHeight: '1.6', marginTop: '-30px' }}>
-              The only dashboard you need to run your pharmacy. Built for modern retail pharmacies across India.
+              The only dashboard you need to run your pharmacy. Built for modern community pharmacies across the UK.
             </p>
           </div>
           <div className="footer-col">
@@ -30,7 +29,7 @@ export default function Footer() {
               <li><Link to="/blog">Blog</Link></li>
               <li><Link to="/login">Log In</Link></li>
               <li><Link to="/signup">Sign Up</Link></li>
-              <li><a href="mailto:support@dashrx.in?subject=Feature%20Request">Feature Request</a></li>
+              <li><a href="mailto:support@dashrx.co.uk?subject=Feature%20Request">Feature Request</a></li>
             </ul>
           </div>
           <div className="footer-col">

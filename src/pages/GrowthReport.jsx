@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Loader, CheckCircle, Percent, TrendingUp, AlertTriangle, Download, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Loader, Percent, TrendingUp, AlertTriangle, Download, RefreshCw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function GrowthReport() {
@@ -7,7 +7,7 @@ export default function GrowthReport() {
     pharmacyName: '',
     monthlyBills: '8000',
     grossMargin: '16.5',
-    primaryStockist: 'Keimed',
+    primaryStockist: 'Alliance Healthcare',
     email: '',
     whatsapp: ''
   });
@@ -20,7 +20,7 @@ export default function GrowthReport() {
     "Connecting to national drug master database...",
     "Benchmarking average stockist purchase rates...",
     "Scanning generic-to-branded acute molecule ratio...",
-    "Estimating Input Tax Credit (ITC) discrepancy gap...",
+    "Estimating VAT input discrepancy gap...",
     "Compiling annual commercial growth report..."
   ];
 
@@ -58,7 +58,7 @@ export default function GrowthReport() {
       pharmacyName: '',
       monthlyBills: '8000',
       grossMargin: '16.5',
-      primaryStockist: 'Keimed',
+      primaryStockist: 'Alliance Healthcare',
       email: '',
       whatsapp: ''
     });
@@ -69,7 +69,7 @@ export default function GrowthReport() {
   const currentMarginNum = parseFloat(formData.grossMargin) || 16.5;
   
   // Calculate simulated leaks
-  const estimatedLeak = Math.round(monthlyBillsNum * 12.5); // ₹12.5 per bill lost in discrepancies
+  const estimatedLeak = Math.round(monthlyBillsNum * 12.5); // £12.50 per bill lost in discrepancies
   const targetMargin = (currentMarginNum + 3.2).toFixed(1);
   const potentialSavings = Math.round((monthlyBillsNum * 150) * 0.032 * 12); // Turnover * margin increase * 12 months
 
@@ -95,19 +95,19 @@ export default function GrowthReport() {
           <td>Stockist Rate Mismatch</td>
           <td>Manual PO Checks</td>
           <td>Automated Rate Audits</td>
-          <td class="highlight">₹${Math.round(potentialSavings * 0.4).toLocaleString()}</td>
+          <td class="highlight">£${Math.round(potentialSavings * 0.4).toLocaleString()}</td>
         </tr>
         <tr>
-          <td>GST Input Credit Gap</td>
+          <td>VAT Input Discrepancy Gap</td>
           <td>Partial Reconciliation</td>
-          <td>100% GSTR-2B Audits</td>
-          <td class="highlight">₹${Math.round(potentialSavings * 0.25).toLocaleString()}</td>
+          <td>100% FP34 VAT Audits</td>
+          <td class="highlight">£${Math.round(potentialSavings * 0.25).toLocaleString()}</td>
         </tr>
         <tr>
           <td>Near-Expiry Returns</td>
           <td>90-Day Returns</td>
           <td>120-Day Alerts</td>
-          <td class="highlight">₹${Math.round(potentialSavings * 0.35).toLocaleString()}</td>
+          <td class="highlight">£${Math.round(potentialSavings * 0.35).toLocaleString()}</td>
         </tr>
       </tbody>
     </table>
@@ -206,7 +206,7 @@ export default function GrowthReport() {
                   <input 
                     type="text" 
                     name="pharmacyName" 
-                    placeholder="e.g. Krishna Medicos" 
+                    placeholder="e.g. Smiths Pharmacy, London" 
                     className="settings-input" 
                     required 
                     value={formData.pharmacyName} 
@@ -216,11 +216,11 @@ export default function GrowthReport() {
                 <div>
                   <label className="settings-label">Primary Stockist / Distributor</label>
                   <select name="primaryStockist" className="settings-input" value={formData.primaryStockist} onChange={handleInputChange}>
-                    <option value="Keimed">Keimed Distributors</option>
-                    <option value="Ascent Wellness">Ascent Wellness</option>
-                    <option value="PharmEasy B2B">PharmEasy B2B</option>
-                    <option value="Apollo B2B">Apollo B2B</option>
-                    <option value="Local Stockist">Independent local stockist</option>
+                    <option value="Alliance Healthcare">Alliance Healthcare</option>
+                    <option value="AAH Pharmaceuticals">AAH Pharmaceuticals</option>
+                    <option value="Phoenix Medical">Phoenix Medical</option>
+                    <option value="Sigma Pharmaceuticals">Sigma Pharmaceuticals</option>
+                    <option value="Local Supplier">Independent local supplier</option>
                   </select>
                 </div>
                 <div>
@@ -249,7 +249,7 @@ export default function GrowthReport() {
                   <input 
                     type="email" 
                     name="email" 
-                    placeholder="name@pharmacy.com" 
+                    placeholder="name@pharmacy.co.uk" 
                     className="settings-input" 
                     required 
                     value={formData.email} 
@@ -261,7 +261,7 @@ export default function GrowthReport() {
                   <input 
                     type="tel" 
                     name="whatsapp" 
-                    placeholder="e.g. 9876543210" 
+                    placeholder="e.g. 07700 900123" 
                     className="settings-input" 
                     value={formData.whatsapp} 
                     onChange={handleInputChange} 
@@ -304,7 +304,7 @@ export default function GrowthReport() {
               <div className="settings-card" style={{ padding: '24px', background: 'var(--bg-secondary)', border: '1px solid var(--divider-color)', borderRadius: '12px', textAlign: 'center' }}>
                 <AlertTriangle size={32} color="#EF4444" style={{ margin: '0 auto 12px' }} />
                 <h3 style={{ fontSize: '14px', color: 'var(--text-muted)', margin: '0 0 6px 0' }}>Annual Profit Leakage</h3>
-                <div style={{ fontSize: '36px', fontWeight: 900, color: '#EF4444' }}>₹{estimatedLeak.toLocaleString()}</div>
+                <div style={{ fontSize: '36px', fontWeight: 900, color: '#EF4444' }}>£{estimatedLeak.toLocaleString()}</div>
                 <p style={{ margin: '6px 0 0 0', fontSize: '12.5px', color: '#EF4444', fontWeight: 600 }}>Unreclaimed Bills</p>
               </div>
 
@@ -321,7 +321,7 @@ export default function GrowthReport() {
             <div className="settings-card mb-8" style={{ padding: '24px', background: 'var(--bg-secondary)', border: '1px solid var(--divider-color)', borderRadius: '12px' }}>
               <h3 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 16px 0' }}>Audited Revenue Opportunities</h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '14.5px', marginBottom: '24px' }}>
-                Based on your monthly volume of {monthlyBillsNum.toLocaleString()} statements, you are losing an estimated <strong>₹{potentialSavings.toLocaleString()}</strong> annually in generic substitution and distributor rate adjustments.
+                Based on your monthly volume of {monthlyBillsNum.toLocaleString()} statements, you are losing an estimated <strong>£{potentialSavings.toLocaleString()}</strong> annually in generic substitution and distributor rate adjustments.
               </p>
               
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>

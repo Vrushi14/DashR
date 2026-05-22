@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, BookOpen, Clock, Calendar, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Clock, Calendar, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Blog() {
@@ -29,19 +29,19 @@ export default function Blog() {
     },
     {
       id: 2,
-      title: "Demystifying GSTR-2B Reconciliation for Retail Pharmacy Owners",
+      title: "Demystifying VAT Reconciliation & FP34 Payments for NHS Pharmacy Owners",
       category: "Tax Compliance",
       readTime: "8 min read",
       date: "May 08, 2026",
-      summary: "Understanding the difference between GSTR-2A and GSTR-2B, and learning how to match purchase invoices to ensure you don't lose valuable input tax credit (ITC).",
+      summary: "Understanding UK VAT categories, NHSBSA Schedule of Payments, and matching purchase invoices to ensure you reclaim every pound of eligible input VAT.",
       content: `
-        <p>Under Indian GST laws, a retail chemist can only claim Input Tax Credit (ITC) if their supplier/distributor has filed their GSTR-1 return and the transaction is visible in the chemist's GSTR-2B statement.</p>
+        <p>For UK pharmacy owners, managing VAT and NHSBSA reimbursement is a major compliance area. Correctly reconciling your purchase invoices against standard rate (20%) and reduced rate (5%) VAT is essential to avoid losing tax reclaims.</p>
         
-        <h3>GSTR-2A vs GSTR-2B: What's the Difference?</h3>
-        <p>GSTR-2A is a dynamic statement that changes as suppliers file their returns late. GSTR-2B is a static, monthly generated statement that locks in eligible input tax credit. It is critical to reconcile your bills against GSTR-2B to avoid tax discrepancies.</p>
+        <h3>Understanding VAT Slabs: 20% vs 5%</h3>
+        <p>Pharmaceutical supplies in the UK fall into different VAT categories. Most prescription items are zero-rated, but standard business purchases and certain OTC items attract 20% VAT, while some hygiene and smoking cessation products fall under the 5% reduced rate. Reconciling your invoices is critical to identifying input VAT that can be reclaimed from HMRC.</p>
         
-        <h3>How to Plug Portal Filing Gaps</h3>
-        <p>Sometimes, local stockists forget to enter your GSTIN or file late. Reconciling your physical invoices against GSTR-2B helps you immediately identify which distributors haven't filed their dues, allowing you to follow up before credit periods expire.</p>
+        <h3>Matching Supplier Invoices to FP34 Schedules</h3>
+        <p>Discrepancies often occur between distributor invoice dates and NHSBSA FP34 Schedule of Payments processing cycles. Setting up a monthly matching process helps you track down missed claims and ensure the dispensing fees and drug tariff discounts are fully accounted for.</p>
       `
     },
     {
@@ -58,7 +58,7 @@ export default function Blog() {
         <p>FEFO stands for First Expiry, First Out. Train your counter staff to place newer stock batches behind older batches on shelves. This ensures items close to expiry are sold first.</p>
         
         <h3>2. Run Near-Expiry Audits 90 Days in Advance</h3>
-        <p>Most Indian pharmaceutical distributors require return claims for near-expiry medicines to be lodged at least 60-90 days before the actual expiry date. Run quarterly batch reports to isolate expiring stock in advance.</p>
+        <p>Most UK pharmaceutical distributors require return claims for near-expiry medicines to be lodged at least 60-90 days before the actual expiry date. Run quarterly batch reports to isolate expiring stock in advance.</p>
       `
     }
   ];
