@@ -2597,10 +2597,50 @@ a:hover {
 .chart-svg-container {
   width: 100%;
   height: 220px;
+  min-height: 180px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
+}
+
+/* Explicit SVG size — percentage height often collapses on production/CDN */
+.chart-svg-container svg {
+  display: block;
+  width: 100%;
+  height: 220px;
+  min-height: 180px;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+/* Theme via CSS classes (reliable in inline SVG; var() in fill/stroke attrs often fails) */
+.chart-svg-grid {
+  stroke: var(--divider-color);
+  stroke-width: 1;
+}
+
+.chart-svg-label {
+  fill: var(--text-muted);
+}
+
+.chart-svg-text {
+  fill: var(--text-main);
+}
+
+.chart-svg-bg {
+  fill: var(--bg-secondary);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .chart-legend-fidelity {
@@ -2624,4 +2664,4 @@ a:hover {
   width: 12px;
   height: 12px;
   border-radius: 3px;
-}
+}

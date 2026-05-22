@@ -1172,7 +1172,7 @@ export default function Dashboard() {
                           <div className="chart-card-fidelity">
                             <div className="chart-title-fidelity">Payment Breakdown</div>
                             <div className="chart-svg-container">
-                              <svg viewBox="0 0 320 200" width="100%" height="100%" style={{ overflow: 'visible' }}>
+                              <svg viewBox="0 0 320 200" width="100%" style={{ overflow: 'visible' }}>
                                 <defs>
                                   <linearGradient id="pbGrad" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="0%" stopColor="#005EB8" stopOpacity="0.25" />
@@ -1185,8 +1185,8 @@ export default function Dashboard() {
                                   const glVal = pbMax - t * pbRange;
                                   return (
                                     <g key={i}>
-                                      <line x1={pbChartLeft} y1={gy} x2={pbChartRight} y2={gy} stroke="var(--divider-color)" strokeWidth="1" strokeDasharray="3" />
-                                      <text x={pbChartLeft - 4} y={gy + 3} textAnchor="end" fontSize="7" fill="var(--text-muted)" fontWeight="600">{glVal >= 0 ? `£${glVal.toFixed(0)}K` : `-£${Math.abs(glVal).toFixed(0)}K`}</text>
+                                      <line x1={pbChartLeft} y1={gy} x2={pbChartRight} y2={gy} className="chart-svg-grid" strokeWidth="1" strokeDasharray="3" />
+                                      <text x={pbChartLeft - 4} y={gy + 3} textAnchor="end" fontSize="7" className="chart-svg-label" fontWeight="600">{glVal >= 0 ? `£${glVal.toFixed(0)}K` : `-£${Math.abs(glVal).toFixed(0)}K`}</text>
                                     </g>
                                   );
                                 })}
@@ -1213,7 +1213,7 @@ export default function Dashboard() {
                                 })}
                                 {/* X-axis labels */}
                                 {['Drug Costs', 'Fees', 'Charges', 'Recovery', 'Net Pymt'].map((lbl, idx) => (
-                                  <text key={idx} x={pbGetX(idx)} y="178" textAnchor="middle" fontSize="6.5" fill="var(--text-muted)" fontWeight="600">{lbl}</text>
+                                  <text key={idx} x={pbGetX(idx)} y="178" textAnchor="middle" fontSize="6.5" className="chart-svg-label" fontWeight="600">{lbl}</text>
                                 ))}
                               </svg>
                             </div>
@@ -1244,10 +1244,10 @@ export default function Dashboard() {
                                   style={{ transform: 'rotate(-90deg)', transformOrigin: '100px 100px' }}
                                 />
                                 {/* Centre hole */}
-                                <circle cx="100" cy="100" r="40" fill="var(--bg-secondary)" />
+                                <circle cx="100" cy="100" r="40" className="chart-svg-bg" />
                                 {/* Centre labels */}
-                                <text x="100" y="97" textAnchor="middle" fontSize="10" fill="var(--text-muted)" fontWeight="700">Total</text>
-                                <text x="100" y="111" textAnchor="middle" fontSize="11" fill="var(--text-main)" fontWeight="800">£{rcTotal.toFixed(1)}K</text>
+                                <text x="100" y="97" textAnchor="middle" fontSize="10" className="chart-svg-label" fontWeight="700">Total</text>
+                                <text x="100" y="111" textAnchor="middle" fontSize="11" className="chart-svg-text" fontWeight="800">£{rcTotal.toFixed(1)}K</text>
                                 {/* Value callouts */}
                                 {pctDrug > 0.05 && (
                                   <text x={coordDrug.x} y={coordDrug.y + 3} textAnchor="middle" fontSize="8" fill="#fff" fontWeight="800">£{rcData.drugAppliance.toFixed(1)}K</text>
@@ -1271,7 +1271,7 @@ export default function Dashboard() {
                           <div className="chart-card-fidelity">
                             <div className="chart-title-fidelity">Prescription Volume</div>
                             <div className="chart-svg-container">
-                              <svg viewBox="0 0 320 180" width="100%" height="100%" style={{ overflow: 'visible' }}>
+                              <svg viewBox="0 0 320 180" width="100%" style={{ overflow: 'visible' }}>
                                 <defs>
                                   <linearGradient id="pvGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                                     <stop offset="0%" stopColor="#0078FF" stopOpacity="0.85" />
@@ -1283,16 +1283,16 @@ export default function Dashboard() {
                                   const y = 10 + (1 - v) * 130;
                                   return (
                                     <g key={i}>
-                                      <line x1="40" y1={y} x2="305" y2={y} stroke="var(--divider-color)" strokeWidth="1" strokeDasharray="3" />
-                                      <text x="35" y={y + 3} textAnchor="end" fontSize="8" fill="var(--text-muted)" fontWeight="600">{pvData.hasData ? Math.round(v * pvMax).toLocaleString() : v.toFixed(1)}</text>
+                                      <line x1="40" y1={y} x2="305" y2={y} className="chart-svg-grid" strokeWidth="1" strokeDasharray="3" />
+                                      <text x="35" y={y + 3} textAnchor="end" fontSize="8" className="chart-svg-label" fontWeight="600">{pvData.hasData ? Math.round(v * pvMax).toLocaleString() : v.toFixed(1)}</text>
                                     </g>
                                   );
                                 })}
                                 {/* Baseline */}
-                                <line x1="40" x2="305" y1="140" y2="140" stroke="var(--divider-color)" strokeWidth="1.5" />
+                                <line x1="40" x2="305" y1="140" y2="140" className="chart-svg-grid" strokeWidth="1.5" />
                                 {/* X axis labels */}
                                 {['Rx Forms', 'e-Rx Forms', 'e-Items', 'Zero Disc', 'Std Disc', 'Total Items'].map((lbl, i) => (
-                                  <text key={i} x={55 + i * 44} y="155" textAnchor="middle" fontSize="7" fill="var(--text-muted)" fontWeight="600">{lbl}</text>
+                                  <text key={i} x={55 + i * 44} y="155" textAnchor="middle" fontSize="7" className="chart-svg-label" fontWeight="600">{lbl}</text>
                                 ))}
                                 {pvData.hasData ? (
                                   pvItems.map((bar, i) => {
@@ -1302,7 +1302,7 @@ export default function Dashboard() {
                                     return (
                                       <g key={i}>
                                         <rect x={x} y={y} width="20" height={h} fill="url(#pvGrad)" rx="2" />
-                                        <text x={x + 10} y={y - 5} textAnchor="middle" fontSize="7.5" fill="var(--text-muted)" fontWeight="700">
+                                        <text x={x + 10} y={y - 5} textAnchor="middle" fontSize="7.5" className="chart-svg-label" fontWeight="700">
                                           {bar.val >= 1000 ? `${(bar.val / 1000).toFixed(1)}K` : bar.val}
                                         </text>
                                       </g>
@@ -1314,7 +1314,7 @@ export default function Dashboard() {
                                     {[55, 99, 143, 187, 231, 275].map((x, i) => (
                                       <circle key={i} cx={x} cy="140" r="3" fill="#CBD5E1" />
                                     ))}
-                                    <text x="172" y="80" textAnchor="middle" fontSize="11" fill="var(--text-muted)" fontWeight="700" opacity="0.5">No data for {selectedMonth}</text>
+                                    <text x="172" y="80" textAnchor="middle" fontSize="11" className="chart-svg-label" fontWeight="700" opacity="0.5">No data for {selectedMonth}</text>
                                   </>
                                 )}
                               </svg>
@@ -1325,23 +1325,23 @@ export default function Dashboard() {
                           <div className="chart-card-fidelity">
                             <div className="chart-title-fidelity">Clinical Activity</div>
                             <div className="chart-svg-container">
-                              <svg viewBox="0 0 280 200" width="100%" height="100%" style={{ overflow: 'visible' }}>
+                              <svg viewBox="0 0 280 200" width="100%" style={{ overflow: 'visible' }}>
                                 {/* Grid */}
                                 {caTicks.map((v, i) => {
                                   const y = 10 + (1 - v / caGridMax) * 140;
                                   return (
                                     <g key={i}>
-                                      <line x1="40" y1={y} x2="265" y2={y} stroke="var(--divider-color)" strokeWidth="1" strokeDasharray="3" />
-                                      <text x="35" y={y + 3} textAnchor="end" fontSize="8" fill="var(--text-muted)" fontWeight="600">{v}</text>
+                                      <line x1="40" y1={y} x2="265" y2={y} className="chart-svg-grid" strokeWidth="1" strokeDasharray="3" />
+                                      <text x="35" y={y + 3} textAnchor="end" fontSize="8" className="chart-svg-label" fontWeight="600">{v}</text>
                                     </g>
                                   );
                                 })}
-                                <line x1="40" x2="265" y1="150" y2="150" stroke="var(--divider-color)" strokeWidth="1.5" />
+                                <line x1="40" x2="265" y1="150" y2="150" className="chart-svg-grid" strokeWidth="1.5" />
 
                                 {caData.nms > 0 ? (
                                   <>
                                     <rect x="55" y={150 - caData.nms * caScale} width="32" height={caData.nms * caScale} fill="#005EB8" rx="2" />
-                                    <text x="71" y={150 - caData.nms * caScale - 5} textAnchor="middle" fontSize="8" fill="var(--text-muted)" fontWeight="700">{caData.nms}</text>
+                                    <text x="71" y={150 - caData.nms * caScale - 5} textAnchor="middle" fontSize="8" className="chart-svg-label" fontWeight="700">{caData.nms}</text>
                                   </>
                                 ) : (
                                   <circle cx="71" cy="150" r="3" fill="#CBD5E1" />
@@ -1351,7 +1351,7 @@ export default function Dashboard() {
                                 {caData.fluVacs > 0 ? (
                                   <>
                                     <rect x="105" y={150 - caData.fluVacs * caScale} width="32" height={caData.fluVacs * caScale} fill="#128274" rx="2" />
-                                    <text x="121" y={150 - caData.fluVacs * caScale - 5} textAnchor="middle" fontSize="8" fill="var(--text-muted)" fontWeight="700">{caData.fluVacs}</text>
+                                    <text x="121" y={150 - caData.fluVacs * caScale - 5} textAnchor="middle" fontSize="8" className="chart-svg-label" fontWeight="700">{caData.fluVacs}</text>
                                   </>
                                 ) : (
                                   <circle cx="121" cy="150" r="3" fill="#CBD5E1" />
@@ -1361,7 +1361,7 @@ export default function Dashboard() {
                                 {caData.covidVacs > 0 ? (
                                   <>
                                     <rect x="157" y={150 - caData.covidVacs * caScale} width="32" height={caData.covidVacs * caScale} fill="#F59E0B" rx="2" />
-                                    <text x="173" y={150 - caData.covidVacs * caScale - 5} textAnchor="middle" fontSize="8" fill="var(--text-muted)" fontWeight="700">{caData.covidVacs}</text>
+                                    <text x="173" y={150 - caData.covidVacs * caScale - 5} textAnchor="middle" fontSize="8" className="chart-svg-label" fontWeight="700">{caData.covidVacs}</text>
                                   </>
                                 ) : (
                                   <circle cx="173" cy="150" r="3" fill="#CBD5E1" />
@@ -1371,7 +1371,7 @@ export default function Dashboard() {
                                 {caData.cpcs > 0 ? (
                                   <>
                                     <rect x="207" y={150 - caData.cpcs * caScale} width="32" height={caData.cpcs * caScale} fill="#7C3AED" rx="2" />
-                                    <text x="223" y={150 - caData.cpcs * caScale - 5} textAnchor="middle" fontSize="8" fill="var(--text-muted)" fontWeight="700">{caData.cpcs}</text>
+                                    <text x="223" y={150 - caData.cpcs * caScale - 5} textAnchor="middle" fontSize="8" className="chart-svg-label" fontWeight="700">{caData.cpcs}</text>
                                   </>
                                 ) : (
                                   <circle cx="223" cy="150" r="3" fill="#CBD5E1" />
@@ -1379,7 +1379,7 @@ export default function Dashboard() {
 
                                 {/* X labels */}
                                 {['NMS', 'Flu Vacs', 'COVID Vacs', 'CPCS'].map((lbl, i) => (
-                                  <text key={i} x={71 + i * 52} y="166" textAnchor="middle" fontSize="7.5" fill="var(--text-muted)" fontWeight="600">{lbl}</text>
+                                  <text key={i} x={71 + i * 52} y="166" textAnchor="middle" fontSize="7.5" className="chart-svg-label" fontWeight="600">{lbl}</text>
                                 ))}
                               </svg>
                             </div>
@@ -1415,15 +1415,15 @@ export default function Dashboard() {
                       <div className="chart-card-fidelity">
                         <div className="chart-title-fidelity">Fee Breakdown — Bar Chart</div>
                         <div className="chart-svg-container">
-                          <svg viewBox="0 0 360 220" width="100%" height="100%" style={{ overflow: 'visible' }}>
+                          <svg viewBox="0 0 360 220" width="100%" style={{ overflow: 'visible' }}>
                             {pfRows.map((r, i) => {
                               const barW = (pfVals[i] / pfMax) * 180;
                               const y = 18 + i * 32;
                               return (
                                 <g key={i}>
-                                  <text x="118" y={y + 13} textAnchor="end" fontSize="8" fill="var(--text-muted)" fontWeight="600">{r.type.length > 18 ? r.type.slice(0, 18) + '…' : r.type}</text>
+                                  <text x="118" y={y + 13} textAnchor="end" fontSize="8" className="chart-svg-label" fontWeight="600">{r.type.length > 18 ? r.type.slice(0, 18) + '…' : r.type}</text>
                                   <rect x="124" y={y} width={Math.max(barW, 2)} height="20" rx="3" fill={pfColors[i % pfColors.length]} opacity="0.85" />
-                                  <text x={130 + Math.max(barW, 2)} y={y + 14} fontSize="8" fill="var(--text-main)" fontWeight="700">{r.total}</text>
+                                  <text x={130 + Math.max(barW, 2)} y={y + 14} fontSize="8" className="chart-svg-text" fontWeight="700">{r.total}</text>
                                 </g>
                               );
                             })}
@@ -1440,9 +1440,9 @@ export default function Dashboard() {
                                 strokeDasharray={`${s.len} ${pfCirc - s.len}`} strokeDashoffset={s.offset}
                                 style={{ transform: 'rotate(-90deg)', transformOrigin: '100px 100px' }} />
                             ))}
-                            <circle cx="100" cy="100" r="37" fill="var(--bg-secondary)" />
-                            <text x="100" y="96" textAnchor="middle" fontSize="9" fill="var(--text-muted)" fontWeight="700">Total Fees</text>
-                            <text x="100" y="112" textAnchor="middle" fontSize="12" fill="var(--text-main)" fontWeight="800">£{pfTotal.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</text>
+                            <circle cx="100" cy="100" r="37" className="chart-svg-bg" />
+                            <text x="100" y="96" textAnchor="middle" fontSize="9" className="chart-svg-label" fontWeight="700">Total Fees</text>
+                            <text x="100" y="112" textAnchor="middle" fontSize="12" className="chart-svg-text" fontWeight="800">£{pfTotal.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</text>
                           </svg>
                         </div>
                         <div className="chart-legend-fidelity" style={{ flexWrap: 'wrap' }}>
@@ -1517,7 +1517,7 @@ export default function Dashboard() {
                       <div className="chart-card-fidelity">
                         <div className="chart-title-fidelity">Cost Breakdown by Category</div>
                         <div className="chart-svg-container">
-                          <svg viewBox="0 0 340 210" width="100%" height="100%" style={{ overflow: 'visible' }}>
+                          <svg viewBox="0 0 340 210" width="100%" style={{ overflow: 'visible' }}>
                             <defs>
                               <linearGradient id="dcNetG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#005EB8" stopOpacity="0.9" /><stop offset="100%" stopColor="#005EB8" stopOpacity="0.4" /></linearGradient>
                               <linearGradient id="dcDiscG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#EF4444" stopOpacity="0.9" /><stop offset="100%" stopColor="#EF4444" stopOpacity="0.4" /></linearGradient>
@@ -1527,9 +1527,9 @@ export default function Dashboard() {
                             {[0, 0.25, 0.5, 0.75, 1].map((t, i) => {
                               const gy = 15 + (1 - t) * 140;
                               const gv = Math.round(t * dcMaxFinal);
-                              return (<g key={i}><line x1="55" y1={gy} x2="320" y2={gy} stroke="var(--divider-color)" strokeWidth="1" strokeDasharray="3" /><text x="50" y={gy + 3} textAnchor="end" fontSize="7" fill="var(--text-muted)" fontWeight="600">£{gv >= 1000 ? (gv / 1000).toFixed(1) + 'K' : gv}</text></g>);
+                              return (<g key={i}><line x1="55" y1={gy} x2="320" y2={gy} className="chart-svg-grid" strokeWidth="1" strokeDasharray="3" /><text x="50" y={gy + 3} textAnchor="end" fontSize="7" className="chart-svg-label" fontWeight="600">£{gv >= 1000 ? (gv / 1000).toFixed(1) + 'K' : gv}</text></g>);
                             })}
-                            <line x1="55" x2="320" y1="155" y2="155" stroke="var(--divider-color)" strokeWidth="1.5" />
+                            <line x1="55" x2="320" y1="155" y2="155" className="chart-svg-grid" strokeWidth="1.5" />
                             {dcRows.map((r, i) => {
                               const groupX = 75 + i * 65;
                               const hNet = (dcNetVals[i] / dcMaxFinal) * 140;
@@ -1540,7 +1540,7 @@ export default function Dashboard() {
                                   <rect x={groupX} y={155 - hNet} width="14" height={Math.max(hNet, 1)} rx="2" fill="url(#dcNetG)" />
                                   <rect x={groupX + 16} y={155 - hDisc} width="14" height={Math.max(hDisc, 1)} rx="2" fill="url(#dcDiscG)" />
                                   <rect x={groupX + 32} y={155 - hFinal} width="14" height={Math.max(hFinal, 1)} rx="2" fill="url(#dcFinalG)" />
-                                  <text x={groupX + 23} y="170" textAnchor="middle" fontSize="6.5" fill="var(--text-muted)" fontWeight="600">{r.cat.split(' ')[0]}</text>
+                                  <text x={groupX + 23} y="170" textAnchor="middle" fontSize="6.5" className="chart-svg-label" fontWeight="600">{r.cat.split(' ')[0]}</text>
                                 </g>
                               );
                             })}
@@ -1562,9 +1562,9 @@ export default function Dashboard() {
                                 strokeDasharray={`${s.len} ${dcDonutCirc - s.len}`} strokeDashoffset={s.offset}
                                 style={{ transform: 'rotate(-90deg)', transformOrigin: '100px 100px' }} />
                             ))}
-                            <circle cx="100" cy="100" r="37" fill="var(--bg-secondary)" />
-                            <text x="100" y="96" textAnchor="middle" fontSize="9" fill="var(--text-muted)" fontWeight="700">Drug Costs</text>
-                            <text x="100" y="112" textAnchor="middle" fontSize="11" fill="var(--text-main)" fontWeight="800">£{(dcTotalFinal / 1000).toFixed(1)}K</text>
+                            <circle cx="100" cy="100" r="37" className="chart-svg-bg" />
+                            <text x="100" y="96" textAnchor="middle" fontSize="9" className="chart-svg-label" fontWeight="700">Drug Costs</text>
+                            <text x="100" y="112" textAnchor="middle" fontSize="11" className="chart-svg-text" fontWeight="800">£{(dcTotalFinal / 1000).toFixed(1)}K</text>
                           </svg>
                         </div>
                         <div className="chart-legend-fidelity" style={{ flexWrap: 'wrap' }}>
@@ -1623,15 +1623,15 @@ export default function Dashboard() {
                       <div className="chart-card-fidelity">
                         <div className="chart-title-fidelity">Deduction Amounts</div>
                         <div className="chart-svg-container">
-                          <svg viewBox="0 0 360 160" width="100%" height="100%" style={{ overflow: 'visible' }}>
+                          <svg viewBox="0 0 360 160" width="100%" style={{ overflow: 'visible' }}>
                             {disRows.map((r, i) => {
                               const barW = disMax > 0 ? (disVals[i] / disMax) * 180 : 0;
                               const y = 18 + i * 40;
                               return (
                                 <g key={i}>
-                                  <text x="120" y={y + 15} textAnchor="end" fontSize="8" fill="var(--text-muted)" fontWeight="600">{r.type.length > 22 ? r.type.slice(0, 22) + '…' : r.type}</text>
+                                  <text x="120" y={y + 15} textAnchor="end" fontSize="8" className="chart-svg-label" fontWeight="600">{r.type.length > 22 ? r.type.slice(0, 22) + '…' : r.type}</text>
                                   <rect x="126" y={y} width={Math.max(barW, 2)} height="24" rx="4" fill={disColors[i % disColors.length]} opacity="0.8" />
-                                  <text x={132 + Math.max(barW, 2)} y={y + 16} fontSize="8.5" fill="var(--text-main)" fontWeight="700">{disVals[i] > 0 ? `-£${disVals[i].toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '£0.00'}</text>
+                                  <text x={132 + Math.max(barW, 2)} y={y + 16} fontSize="8.5" className="chart-svg-text" fontWeight="700">{disVals[i] > 0 ? `-£${disVals[i].toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '£0.00'}</text>
                                 </g>
                               );
                             })}
@@ -1648,8 +1648,8 @@ export default function Dashboard() {
                                 strokeDasharray={`${s.len} ${disDonutCirc - s.len}`} strokeDashoffset={s.offset}
                                 style={{ transform: 'rotate(-90deg)', transformOrigin: '100px 100px' }} />
                             ))}
-                            <circle cx="100" cy="100" r="37" fill="var(--bg-secondary)" />
-                            <text x="100" y="96" textAnchor="middle" fontSize="9" fill="var(--text-muted)" fontWeight="700">Total</text>
+                            <circle cx="100" cy="100" r="37" className="chart-svg-bg" />
+                            <text x="100" y="96" textAnchor="middle" fontSize="9" className="chart-svg-label" fontWeight="700">Total</text>
                             <text x="100" y="112" textAnchor="middle" fontSize="11" fill="#EF4444" fontWeight="800">-£{disTotal.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</text>
                           </svg>
                         </div>
@@ -1719,7 +1719,7 @@ export default function Dashboard() {
                       <div className="chart-card-fidelity">
                         <div className="chart-title-fidelity">Service Volume</div>
                         <div className="chart-svg-container">
-                          <svg viewBox="0 0 340 210" width="100%" height="100%" style={{ overflow: 'visible' }}>
+                          <svg viewBox="0 0 340 210" width="100%" style={{ overflow: 'visible' }}>
                             <defs>
                               {csColors.map((c, i) => (
                                 <linearGradient key={i} id={`csVolG${i}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={c} stopOpacity="0.9" /><stop offset="100%" stopColor={c} stopOpacity="0.35" /></linearGradient>
@@ -1728,9 +1728,9 @@ export default function Dashboard() {
                             {/* Grid */}
                             {[0, 0.25, 0.5, 0.75, 1].map((t, i) => {
                               const gy = 15 + (1 - t) * 145;
-                              return (<g key={i}><line x1="40" y1={gy} x2="320" y2={gy} stroke="var(--divider-color)" strokeWidth="1" strokeDasharray="3" /><text x="36" y={gy + 3} textAnchor="end" fontSize="7" fill="var(--text-muted)" fontWeight="600">{Math.round(t * csMaxVol)}</text></g>);
+                              return (<g key={i}><line x1="40" y1={gy} x2="320" y2={gy} className="chart-svg-grid" strokeWidth="1" strokeDasharray="3" /><text x="36" y={gy + 3} textAnchor="end" fontSize="7" className="chart-svg-label" fontWeight="600">{Math.round(t * csMaxVol)}</text></g>);
                             })}
-                            <line x1="40" x2="320" y1="160" y2="160" stroke="var(--divider-color)" strokeWidth="1.5" />
+                            <line x1="40" x2="320" y1="160" y2="160" className="chart-svg-grid" strokeWidth="1.5" />
                             {csRows.map((r, i) => {
                               const bw = csRows.length <= 3 ? 42 : 30;
                               const gap = csRows.length <= 3 ? 85 : 55;
@@ -1739,8 +1739,8 @@ export default function Dashboard() {
                               return (
                                 <g key={i}>
                                   <rect x={x} y={160 - h} width={bw} height={Math.max(h, 1)} rx="3" fill={`url(#csVolG${i})`} />
-                                  <text x={x + bw / 2} y={160 - h - 5} textAnchor="middle" fontSize="8" fill="var(--text-muted)" fontWeight="700">{csVolVals[i]}</text>
-                                  <text x={x + bw / 2} y="175" textAnchor="middle" fontSize="6.5" fill="var(--text-muted)" fontWeight="600">{r.svc.split('(')[0].trim().split(' ').slice(0, 2).join(' ')}</text>
+                                  <text x={x + bw / 2} y={160 - h - 5} textAnchor="middle" fontSize="8" className="chart-svg-label" fontWeight="700">{csVolVals[i]}</text>
+                                  <text x={x + bw / 2} y="175" textAnchor="middle" fontSize="6.5" className="chart-svg-label" fontWeight="600">{r.svc.split('(')[0].trim().split(' ').slice(0, 2).join(' ')}</text>
                                 </g>
                               );
                             })}
@@ -1751,7 +1751,7 @@ export default function Dashboard() {
                       <div className="chart-card-fidelity">
                         <div className="chart-title-fidelity">Revenue Claimed (£)</div>
                         <div className="chart-svg-container">
-                          <svg viewBox="0 0 340 210" width="100%" height="100%" style={{ overflow: 'visible' }}>
+                          <svg viewBox="0 0 340 210" width="100%" style={{ overflow: 'visible' }}>
                             <defs>
                               {csColors.map((c, i) => (
                                 <linearGradient key={i} id={`csClG${i}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={c} stopOpacity="0.9" /><stop offset="100%" stopColor={c} stopOpacity="0.35" /></linearGradient>
@@ -1760,9 +1760,9 @@ export default function Dashboard() {
                             {[0, 0.25, 0.5, 0.75, 1].map((t, i) => {
                               const gy = 15 + (1 - t) * 145;
                               const gv = Math.round(t * csMaxClaimed);
-                              return (<g key={i}><line x1="45" y1={gy} x2="320" y2={gy} stroke="var(--divider-color)" strokeWidth="1" strokeDasharray="3" /><text x="42" y={gy + 3} textAnchor="end" fontSize="7" fill="var(--text-muted)" fontWeight="600">£{gv >= 1000 ? (gv / 1000).toFixed(1) + 'K' : gv}</text></g>);
+                              return (<g key={i}><line x1="45" y1={gy} x2="320" y2={gy} className="chart-svg-grid" strokeWidth="1" strokeDasharray="3" /><text x="42" y={gy + 3} textAnchor="end" fontSize="7" className="chart-svg-label" fontWeight="600">£{gv >= 1000 ? (gv / 1000).toFixed(1) + 'K' : gv}</text></g>);
                             })}
-                            <line x1="45" x2="320" y1="160" y2="160" stroke="var(--divider-color)" strokeWidth="1.5" />
+                            <line x1="45" x2="320" y1="160" y2="160" className="chart-svg-grid" strokeWidth="1.5" />
                             {csRows.map((r, i) => {
                               const bw = csRows.length <= 3 ? 42 : 30;
                               const gap = csRows.length <= 3 ? 85 : 55;
@@ -1771,13 +1771,13 @@ export default function Dashboard() {
                               return (
                                 <g key={i}>
                                   <rect x={x} y={160 - h} width={bw} height={Math.max(h, 1)} rx="3" fill={`url(#csClG${i})`} />
-                                  <text x={x + bw / 2} y={160 - h - 5} textAnchor="middle" fontSize="7.5" fill="var(--text-muted)" fontWeight="700">£{csClaimedVals[i] >= 1000 ? (csClaimedVals[i] / 1000).toFixed(1) + 'K' : csClaimedVals[i].toFixed(0)}</text>
-                                  <text x={x + bw / 2} y="175" textAnchor="middle" fontSize="6.5" fill="var(--text-muted)" fontWeight="600">{r.svc.split('(')[0].trim().split(' ').slice(0, 2).join(' ')}</text>
+                                  <text x={x + bw / 2} y={160 - h - 5} textAnchor="middle" fontSize="7.5" className="chart-svg-label" fontWeight="700">£{csClaimedVals[i] >= 1000 ? (csClaimedVals[i] / 1000).toFixed(1) + 'K' : csClaimedVals[i].toFixed(0)}</text>
+                                  <text x={x + bw / 2} y="175" textAnchor="middle" fontSize="6.5" className="chart-svg-label" fontWeight="600">{r.svc.split('(')[0].trim().split(' ').slice(0, 2).join(' ')}</text>
                                 </g>
                               );
                             })}
                             {/* Total label */}
-                            <text x="320" y="195" textAnchor="end" fontSize="9" fill="var(--text-main)" fontWeight="800">Total: £{csTotalClaimed.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</text>
+                            <text x="320" y="195" textAnchor="end" fontSize="9" className="chart-svg-text" fontWeight="800">Total: £{csTotalClaimed.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</text>
                           </svg>
                         </div>
                       </div>
@@ -1818,19 +1818,19 @@ export default function Dashboard() {
                         <div className="chart-card-fidelity">
                           <div className="chart-title-fidelity">High-Cost Items Comparison</div>
                           <div className="chart-svg-container">
-                            <svg viewBox={`0 0 380 ${Math.max(eiItems.length * 36 + 30, 100)}`} width="100%" height="100%" style={{ overflow: 'visible' }}>
+                            <svg viewBox={`0 0 380 ${Math.max(eiItems.length * 36 + 30, 100)}`} width="100%" style={{ overflow: 'visible' }}>
                               {eiItems.map((item, i) => {
                                 const barW = (eiPriceVals[i] / eiMaxPrice) * 170;
                                 const y = 14 + i * 36;
                                 return (
                                   <g key={i}>
-                                    <text x="125" y={y + 15} textAnchor="end" fontSize="8" fill="var(--text-muted)" fontWeight="600">{item.drugName.length > 20 ? item.drugName.slice(0, 20) + '…' : item.drugName}</text>
+                                    <text x="125" y={y + 15} textAnchor="end" fontSize="8" className="chart-svg-label" fontWeight="600">{item.drugName.length > 20 ? item.drugName.slice(0, 20) + '…' : item.drugName}</text>
                                     <rect x="130" y={y} width={Math.max(barW, 4)} height="22" rx="3" fill={eiColors[i % eiColors.length]} opacity="0.85" />
-                                    <text x={138 + Math.max(barW, 4)} y={y + 15} fontSize="8.5" fill="var(--text-main)" fontWeight="700">{item.basicPrice}</text>
+                                    <text x={138 + Math.max(barW, 4)} y={y + 15} fontSize="8.5" className="chart-svg-text" fontWeight="700">{item.basicPrice}</text>
                                   </g>
                                 );
                               })}
-                              <text x="130" y={eiItems.length * 36 + 25} fontSize="9" fill="var(--text-main)" fontWeight="800">Total: £{eiTotalCost.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</text>
+                              <text x="130" y={eiItems.length * 36 + 25} fontSize="9" className="chart-svg-text" fontWeight="800">Total: £{eiTotalCost.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</text>
                             </svg>
                           </div>
                         </div>
