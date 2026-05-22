@@ -878,9 +878,9 @@ export default function Dashboard() {
         {/* ── Sidebar ── */}
         <aside className="dashboard-sidebar">
           <Link to="/" className="sidebar-logo">
-            <img src="/DashRx.png" alt="DashRx" style={{ height: 55, objectFit: 'contain' }} />
+            <img src="/DashRx.png" alt="DashRx" />
           </Link>
-          <div style={{ flex: 1, overflowY: 'auto' }}>
+          <div className="sidebar-nav-groups">
             <div className="sidebar-section-title">Audit Hub</div>
             <nav style={{ display: 'flex', flexDirection: 'column' }}>
               <SideBtn tab="dashboard" icon={LayoutDashboard} label="FP34 Dashboard" activeTab={activeTab} setActiveTab={setActiveTab} />

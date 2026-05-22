@@ -679,6 +679,52 @@ a:hover {
   box-shadow: 0 25px 50px rgba(15, 40, 84, 0.12), inset 0 1px 0 rgba(255,255,255,1);
 }
 
+/* Home — Secure & Private highlight card */
+.secure-private-card {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 56px 48px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--divider-color);
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(15, 40, 84, 0.06);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.secure-private-card:hover {
+  border-color: rgba(0, 94, 184, 0.2);
+  box-shadow: 0 16px 48px rgba(15, 40, 84, 0.1);
+}
+
+.dark-theme .secure-private-card {
+  background: var(--bg-secondary);
+  border-color: var(--divider-color);
+}
+
+.secure-private-card-title {
+  font-family: var(--font-heading);
+  font-size: 36px;
+  font-weight: 600;
+  color: var(--primary-color);
+  margin: 24px 0 16px;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.secure-private-card-text {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 520px;
+  margin: 0;
+}
+
 .step-badge {
   position: absolute;
   top: 24px;
@@ -1644,9 +1690,16 @@ a:hover {
   /* DashRx Navy */
   font-family: var(--font-logo);
   letter-spacing: -0.7px;
-  padding: 8px 12px;
-  margin-bottom: 32px;
+  padding: 4px 12px 0;
+  margin-bottom: 8px;
   text-decoration: none;
+}
+
+.sidebar-logo img {
+  height: 80px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
 }
 
 .dark-theme .sidebar-logo {
@@ -1661,14 +1714,23 @@ a:hover {
   color: #38BDF8;
 }
 
+.sidebar-nav-groups {
+  flex: 1;
+  overflow-y: auto;
+}
+
 .sidebar-section-title {
   font-size: 11px;
   font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 1.2px;
-  margin: 20px 12px 8px 12px;
+  margin: 14px 12px 8px 12px;
   font-family: var(--font-body);
+}
+
+.sidebar-nav-groups > .sidebar-section-title:first-child {
+  margin-top: 4px;
 }
 
 .sidebar-link {

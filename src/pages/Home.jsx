@@ -360,12 +360,14 @@ export default function Home() {
       </section>
 
       <section className="py-24">
-        <div className="container text-center">
-          <Shield size={48} color="var(--chart-blue)" style={{ margin: '0 auto 24px' }} />
-          <h2 className="section-title">Secure & Private</h2>
-          <p className="section-subtitle" style={{ maxWidth: '650px', margin: '0 auto' }}>
-            Encrypted storage, GDPR compliant, and privacy by design. Your data stays yours.
-          </p>
+        <div className="container">
+          <div className="secure-private-card">
+            <Shield size={48} color="var(--chart-blue)" strokeWidth={1.5} aria-hidden />
+            <h2 className="secure-private-card-title">Secure &amp; Private</h2>
+            <p className="secure-private-card-text">
+              Encrypted storage, GDPR compliant, and privacy by design. Your data stays yours.
+            </p>
+          </div>
         </div>
       </section>
 
