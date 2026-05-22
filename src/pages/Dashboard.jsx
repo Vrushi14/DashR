@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { parseFP34PDF, getExtractionConfidence } from '../utils/pdfParser.js';
+import { parseFP34PDF, getExtractionConfidence, parseSupplierInvoicePDF, parseSupplierInvoiceFromFilename } from '../utils/pdfParser.js';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   LayoutDashboard, FileText, CreditCard, BarChart2, Settings,
@@ -682,6 +682,48 @@ export default function Dashboard() {
     e.target.value = ''; // reset so same file can be re-selected
 
     const ext = f.name.split('.').pop().toLowerCase();
+
+    if (activeTab === 'recon') {
+      setIsUploading(true);
+      setUploadProgress(10);
+      try {
+        setUploadProgress(30);
+        let parsed;
+        if (ext === 'pdf') {
+          parsed = await parseSupplierInvoicePDF(f);
+        } else {
+          parsed = parseSupplierInvoiceFromFilename(f.name);
+        }
+        setUploadProgress(70);
+
+        try {
+          const res = await fetch(`${API}/api/invoices/${userId || 'guest'}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(parsed),
+          });
+          const saved = await res.json();
+          parsed.id = saved.id || ('local-' + Date.now());
+        } catch (err) {
+          console.warn('Backend save failed, using local ID fallback:', err);
+          parsed.id = 'local-' + Date.now();
+        }
+
+        setUploadProgress(100);
+        setInvoices(prev => [parsed, ...prev]);
+        setUploadedFile(f.name);
+        setIsUploading(false);
+        setUploadProgress(0);
+
+        alert(`Audit complete for supplier bill "${f.name}". ${parsed.leakage !== '£0' ? 'Margin leakage of ' + parsed.leakage + ' detected!' : 'No discrepancies found.'}`);
+      } catch (err) {
+        console.error('Error processing supplier bill:', err);
+        setIsUploading(false);
+        setUploadProgress(0);
+        alert(`Error processing supplier bill: ${err.message}`);
+      }
+      return;
+    }
 
     if (ext === 'json') {
       const reader = new FileReader();
