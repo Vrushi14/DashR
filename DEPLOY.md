@@ -14,8 +14,20 @@ Accounts created locally are **not** on Vercel until you sign up again on the li
 ## Fix “database connection” error on Vercel
 
 1. Open [Vercel Dashboard](https://vercel.com) → your DashRx project → **Settings** → **Environment Variables**.
-2. Add **`POSTGRES_URL`** with your Postgres connection string (Vercel Postgres, Neon, or Supabase).
-3. Enable it for **Production** (and Preview if you use preview URLs).
+2. Add these Supabase variables (from Supabase → Settings → Database):
+   - **`POSTGRES_URL`** — pooled, port **6543**, `?pgbouncer=true`
+   - **`POSTGRES_URL_NON_POOLING`** — direct, host **`db.xxx.supabase.co`**, port **5432**
+3. Enable them for **Production** (and Preview if you use preview URLs).
+
+   **Minimum required on Vercel:**
+
+   | Variable | Which string in Supabase |
+   |----------|--------------------------|
+   | `POSTGRES_URL` | **Transaction pooler**, port **6543**, includes `pgbouncer=true` |
+   | `POSTGRES_URL_NON_POOLING` | **Direct**, host `db….supabase.co`, port **5432** |
+
+   Do **not** rely on `POSTGRES_HOST` + `POSTGRES_USER` alone — the pooler username must be `postgres.[project-ref]`.
+
 4. **Redeploy** the project (Deployments → … → Redeploy).
 
 Check the API:

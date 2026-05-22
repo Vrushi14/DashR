@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
-import pool, { isDbConfigured, testConnection, mapDbError } from './db.js';
+import pool, { isDbConfigured, testConnection, mapDbError, runSchemaInit } from './db.js';
 
 const app = express();
 
@@ -20,9 +20,8 @@ function requireDb(res) {
 }
 
 // ─── INIT TABLES ──────────────────────────────────────────────────────────────
-async function initDB() {
-  if (!pool) return;
-  await pool.query(`
+const SCHEMA_QUERIES = [
+  `
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
@@ -33,9 +32,8 @@ async function initDB() {
       nhs_contract TEXT DEFAULT '',
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
-  `);
-
-  await pool.query(`
+  `,
+  `
     CREATE TABLE IF NOT EXISTS invoices (
       id SERIAL PRIMARY KEY,
       user_id INTEGER NOT NULL REFERENCES users(id),
@@ -49,9 +47,8 @@ async function initDB() {
       status TEXT DEFAULT 'Fully Matched',
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
-  `);
-
-  await pool.query(`
+  `,
+  `
     CREATE TABLE IF NOT EXISTS invoice_items (
       id SERIAL PRIMARY KEY,
       invoice_id INTEGER NOT NULL REFERENCES invoices(id),
@@ -62,10 +59,20 @@ async function initDB() {
       variance TEXT NOT NULL,
       total_leakage TEXT NOT NULL
     )
-  `);
+  `,
+];
+
+async function initDB() {
+  if (!pool) return;
+  try {
+    await runSchemaInit(SCHEMA_QUERIES);
+    console.log('Database tables ready');
+  } catch (err) {
+    console.error('DB init failed:', err.message);
+  }
 }
 
-initDB().catch((err) => console.error('DB init failed:', err.message));
+initDB();
 
 // ─── AUTH ─────────────────────────────────────────────────────────────────────
 

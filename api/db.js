@@ -11,12 +11,35 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const { Pool } = pg;
 
-const connectionString =
-  process.env.POSTGRES_URL ||
-  process.env.POSTGRES_PRISMA_URL ||
-  process.env.POSTGRES_URL_NON_POOLING;
+function normalizeConnectionString(url) {
+  if (!url?.trim()) return '';
+  let trimmed = url.trim();
+  if (trimmed.startsWith('postgres://')) {
+    trimmed = trimmed.replace(/^postgres:\/\//, 'postgresql://');
+  }
+  // pg v8 treats sslmode=require as strict verify; Supabase needs libpq-compat
+  if (trimmed.includes('sslmode=require') && !trimmed.includes('uselibpqcompat=')) {
+    const sep = trimmed.includes('?') ? '&' : '?';
+    trimmed += `${sep}uselibpqcompat=true`;
+  }
+  return trimmed;
+}
 
-const hasConnectionString = Boolean(connectionString?.trim());
+const sslConfig = { rejectUnauthorized: false };
+
+const connectionString = normalizeConnectionString(
+  process.env.POSTGRES_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.POSTGRES_URL_NON_POOLING
+);
+
+const initConnectionString = normalizeConnectionString(
+  process.env.POSTGRES_URL_NON_POOLING ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_PRISMA_URL
+);
+
+const hasConnectionString = Boolean(connectionString);
 const hasDiscreteConfig = Boolean(
   process.env.POSTGRES_HOST &&
   process.env.POSTGRES_USER &&
@@ -30,8 +53,8 @@ export function isDbConfigured() {
 function buildPoolConfig() {
   if (hasConnectionString) {
     return {
-      connectionString: connectionString.trim(),
-      ssl: { rejectUnauthorized: false },
+      connectionString,
+      ssl: sslConfig,
       max: 2,
       idleTimeoutMillis: 10000,
       connectionTimeoutMillis: 10000,
@@ -45,7 +68,7 @@ function buildPoolConfig() {
       database: process.env.POSTGRES_DATABASE,
       password: process.env.POSTGRES_PASSWORD,
       port: Number(process.env.POSTGRES_PORT) || 5432,
-      ssl: { rejectUnauthorized: false },
+      ssl: sslConfig,
       max: 2,
       idleTimeoutMillis: 10000,
       connectionTimeoutMillis: 10000,
@@ -57,6 +80,27 @@ function buildPoolConfig() {
 
 const poolConfig = buildPoolConfig();
 const pool = poolConfig ? new Pool(poolConfig) : null;
+
+/** Direct connection for CREATE TABLE (Supabase pooler port 6543 cannot run all DDL). */
+let initPool = null;
+if (initConnectionString) {
+  initPool = new Pool({
+    connectionString: initConnectionString,
+    ssl: sslConfig,
+    max: 1,
+    connectionTimeoutMillis: 15000,
+  });
+}
+
+export async function runSchemaInit(queries) {
+  const client = initPool || pool;
+  if (!client) throw new Error('Database not configured');
+  for (const sql of queries) {
+    await client.query(sql);
+  }
+}
+
+export default pool;
 
 export async function testConnection() {
   if (!pool) {
@@ -86,5 +130,3 @@ export function mapDbError(err) {
   }
   return 'Database error. Please try again later or contact support.';
 }
-
-export default pool;
