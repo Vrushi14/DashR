@@ -202,6 +202,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.listen(PORT, () => {
-  console.log(`DashRx server running on port ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`DashRx server (SQLite) running on http://0.0.0.0:${PORT}`);
+  console.log('Use with: npm run dev (Vite proxies /api to this port)');
 });

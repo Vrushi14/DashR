@@ -1,14 +1,27 @@
 import express from 'express';
 import cors from 'cors';
-import pool from './db.js';
+import { fileURLToPath } from 'url';
+import pool, { isDbConfigured, testConnection, mapDbError } from './db.js';
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
+function requireDb(res) {
+  if (!isDbConfigured() || !pool) {
+    res.status(503).json({
+      error:
+        'Database is not configured. Set POSTGRES_URL in Vercel Project Settings → Environment Variables, then redeploy.',
+    });
+    return false;
+  }
+  return true;
+}
+
 // ─── INIT TABLES ──────────────────────────────────────────────────────────────
 async function initDB() {
+  if (!pool) return;
   await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
       id SERIAL PRIMARY KEY,
@@ -52,12 +65,13 @@ async function initDB() {
   `);
 }
 
-initDB().catch(console.error);
+initDB().catch((err) => console.error('DB init failed:', err.message));
 
 // ─── AUTH ─────────────────────────────────────────────────────────────────────
 
 // Signup
 app.post('/api/signup', async (req, res) => {
+  if (!requireDb(res)) return;
   const { name, email, password, pharmacy_name, ods_code, nhs_contract } = req.body;
   if (!name || !email || !password) {
     return res.status(400).json({ error: 'All fields are required' });
@@ -82,12 +96,14 @@ app.post('/api/signup', async (req, res) => {
     if (err.code === '23505') {
       return res.status(400).json({ error: 'Email already exists' });
     }
-    res.status(500).json({ error: err.message });
+    console.error('Signup error:', err.message);
+    res.status(500).json({ error: mapDbError(err) });
   }
 });
 
 // Login
 app.post('/api/login', async (req, res) => {
+  if (!requireDb(res)) return;
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required' });
@@ -114,7 +130,8 @@ app.post('/api/login', async (req, res) => {
       res.status(401).json({ error: 'Invalid credentials' });
     }
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Login error:', err.message);
+    res.status(500).json({ error: mapDbError(err) });
   }
 });
 
@@ -122,6 +139,7 @@ app.post('/api/login', async (req, res) => {
 
 // Get profile
 app.get('/api/profile/:userId', async (req, res) => {
+  if (!requireDb(res)) return;
   try {
     const result = await pool.query(
       'SELECT id, name, email, pharmacy_name, ods_code, nhs_contract FROM users WHERE id = $1',
@@ -130,12 +148,13 @@ app.get('/api/profile/:userId', async (req, res) => {
     if (result.rows.length === 0) return res.status(404).json({ error: 'User not found' });
     res.json(result.rows[0]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: mapDbError(err) });
   }
 });
 
 // Update profile
 app.put('/api/profile/:userId', async (req, res) => {
+  if (!requireDb(res)) return;
   const { name, pharmacy_name, ods_code, nhs_contract } = req.body;
   try {
     await pool.query(
@@ -144,7 +163,7 @@ app.put('/api/profile/:userId', async (req, res) => {
     );
     res.json({ message: 'Profile updated successfully' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: mapDbError(err) });
   }
 });
 
@@ -152,6 +171,7 @@ app.put('/api/profile/:userId', async (req, res) => {
 
 // Get all invoices for a user
 app.get('/api/invoices/:userId', async (req, res) => {
+  if (!requireDb(res)) return;
   try {
     const result = await pool.query(
       'SELECT * FROM invoices WHERE user_id = $1 ORDER BY created_at DESC',
@@ -166,12 +186,13 @@ app.get('/api/invoices/:userId', async (req, res) => {
     }
     res.json(result.rows);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: mapDbError(err) });
   }
 });
 
 // Create a new invoice
 app.post('/api/invoices/:userId', async (req, res) => {
+  if (!requireDb(res)) return;
   const { distributor, bill_no, date, amount, vat_slab, leakage, leakage_type, status } = req.body;
   try {
     const result = await pool.query(
@@ -180,12 +201,13 @@ app.post('/api/invoices/:userId', async (req, res) => {
     );
     res.status(201).json({ id: result.rows[0].id, message: 'Invoice saved' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: mapDbError(err) });
   }
 });
 
 // Raise a claim on an invoice
 app.post('/api/invoices/:invoiceId/claim', async (req, res) => {
+  if (!requireDb(res)) return;
   if (req.params.invoiceId.startsWith('demo-')) {
     return res.json({ message: 'Claim logged (demo mode)' });
   }
@@ -193,12 +215,13 @@ app.post('/api/invoices/:invoiceId/claim', async (req, res) => {
     await pool.query("UPDATE invoices SET status = 'Claim Raised' WHERE id = $1", [req.params.invoiceId]);
     res.json({ message: 'Claim raised successfully' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: mapDbError(err) });
   }
 });
 
 // Delete an invoice
 app.delete('/api/invoices/:invoiceId', async (req, res) => {
+  if (!requireDb(res)) return;
   if (req.params.invoiceId.startsWith('demo-')) {
     return res.json({ message: 'Demo invoice cleared' });
   }
@@ -206,23 +229,53 @@ app.delete('/api/invoices/:invoiceId', async (req, res) => {
     await pool.query('DELETE FROM invoices WHERE id = $1', [req.params.invoiceId]);
     res.json({ message: 'Invoice deleted' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: mapDbError(err) });
   }
 });
 
 // Clear all invoices for a user
 app.delete('/api/invoices/user/:userId', async (req, res) => {
+  if (!requireDb(res)) return;
   try {
     await pool.query('DELETE FROM invoices WHERE user_id = $1', [req.params.userId]);
     res.json({ message: 'All invoices cleared' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: mapDbError(err) });
   }
 });
 
 // ─── HEALTH CHECK ─────────────────────────────────────────────────────────────
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/api/health', async (req, res) => {
+  if (!isDbConfigured()) {
+    return res.status(503).json({
+      status: 'error',
+      database: 'not_configured',
+      message: 'POSTGRES_URL is missing. Add it in Vercel environment variables.',
+      timestamp: new Date().toISOString(),
+    });
+  }
+  const db = await testConnection();
+  if (!db.ok) {
+    return res.status(503).json({
+      status: 'error',
+      database: 'unreachable',
+      message: db.error,
+      timestamp: new Date().toISOString(),
+    });
+  }
+  res.json({ status: 'ok', database: 'connected', timestamp: new Date().toISOString() });
 });
 
 export default app;
+
+// Local Postgres API (optional): node api/index.js
+const isMain = process.argv[1] === fileURLToPath(import.meta.url);
+if (isMain) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`DashRx API (Postgres) on http://0.0.0.0:${PORT}`);
+    if (!isDbConfigured()) {
+      console.warn('Warning: POSTGRES_URL not set — login/signup will fail until .env.local is configured.');
+    }
+  });
+}

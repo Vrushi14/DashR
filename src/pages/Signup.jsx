@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { apiPost } from '../utils/api.js';
 import { Check, ArrowLeft, ArrowRight } from 'lucide-react';
 
 export default function Signup() {
@@ -58,34 +59,23 @@ export default function Signup() {
     if (!isFormValid) return;
 
     try {
-      const API_URL = import.meta.env.VITE_API_URL || '';
-      const response = await fetch(`${API_URL}/api/signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: `${firstName} ${lastName}`,
-          email,
-          password,
-          pharmacy_name: pharmacyName,
-          ods_code: odsCode,
-          nhs_contract: ''
-        })
+      const data = await apiPost('/api/signup', {
+        name: `${firstName} ${lastName}`,
+        email,
+        password,
+        pharmacy_name: pharmacyName,
+        ods_code: odsCode,
+        nhs_contract: '',
       });
-      const data = await response.json();
-      if (response.ok) {
-        console.log('Signed up successfully', data);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('pharmadash_user_name', data.user.name || '');
-        localStorage.setItem('pharmadash_pharmacy_name', data.user.pharmacy_name || '');
-        localStorage.setItem('pharmadash_ods_code', data.user.ods_code || '');
-        localStorage.setItem('pharmadash_nhs_contract', data.user.nhs_contract || '');
-        navigate('/dashboard');
-      } else {
-        alert('Signup failed: ' + data.error);
-      }
+      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('pharmadash_user_name', data.user.name || '');
+      localStorage.setItem('pharmadash_pharmacy_name', data.user.pharmacy_name || '');
+      localStorage.setItem('pharmadash_ods_code', data.user.ods_code || '');
+      localStorage.setItem('pharmadash_nhs_contract', data.user.nhs_contract || '');
+      navigate('/dashboard');
     } catch (err) {
       console.error(err);
-      alert('Error connecting to server. Make sure your server is running.');
+      alert(err.message || 'Signup failed');
     }
   };
 

@@ -8,8 +8,9 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server": "node --experimental-vm-modules api/index.js",
-    "start": "node api/index.js"
+    "server": "node server/index.cjs",
+    "start": "node server/index.cjs",
+    "server:postgres": "node api/index.js"
   },
   "dependencies": {
     "cors": "^2.8.6",

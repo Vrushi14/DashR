@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { apiPost } from '../utils/api.js';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -10,28 +11,16 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const API_URL = import.meta.env.VITE_API_URL || '';
-      const response = await fetch(`${API_URL}/api/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-      const data = await response.json();
-      if (response.ok) {
-        console.log('Logged in successfully', data);
-        // Persist full profile so Dashboard can hydrate from it
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('pharmadash_user_name', data.user.name || '');
-        localStorage.setItem('pharmadash_pharmacy_name', data.user.pharmacy_name || '');
-        localStorage.setItem('pharmadash_ods_code', data.user.ods_code || '');
-        localStorage.setItem('pharmadash_nhs_contract', data.user.nhs_contract || '');
-        navigate('/dashboard');
-      } else {
-        alert('Login failed: ' + data.error);
-      }
+      const data = await apiPost('/api/login', { email, password });
+      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('pharmadash_user_name', data.user.name || '');
+      localStorage.setItem('pharmadash_pharmacy_name', data.user.pharmacy_name || '');
+      localStorage.setItem('pharmadash_ods_code', data.user.ods_code || '');
+      localStorage.setItem('pharmadash_nhs_contract', data.user.nhs_contract || '');
+      navigate('/dashboard');
     } catch (err) {
       console.error(err);
-      alert('Error connecting to server');
+      alert(err.message || 'Login failed');
     }
   };
 
