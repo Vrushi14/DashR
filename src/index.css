@@ -1696,10 +1696,12 @@ a:hover {
 }
 
 .sidebar-logo img {
-  height: 80px;
+  height: 120px;
   width: auto;
   max-width: 100%;
   object-fit: contain;
+  margin-top: -10px;
+  margin-bottom: -10px;
 }
 
 .dark-theme .sidebar-logo {
