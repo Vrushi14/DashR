@@ -1391,14 +1391,73 @@ export default function Dashboard() {
                 )}{/* end Overview */}
 
                 {/* ══ PHARMACY FEES SUB-TAB ══ */}
-                {activeSubTab === 'Pharmacy Fees' && (
+                {activeSubTab === 'Pharmacy Fees' && (() => {
+                  const pfRows = activeMonthData.subTabs?.pharmacyFees || [];
+                  const pfVals = pfRows.map(r => parseFloat((r.total || '£0').replace(/[£,]/g, '')) || 0);
+                  const pfMax = Math.max(...pfVals, 1);
+                  const pfColors = ['#005EB8', '#128274', '#7C3AED', '#F59E0B', '#0078FF', '#EF4444'];
+                  const pfTotal = pfVals.reduce((s, v) => s + v, 0);
+                  // Donut math
+                  const pfCirc = 2 * Math.PI * 55;
+                  let pfCumul = 0;
+                  const pfSlices = pfRows.map((r, i) => {
+                    const pct = pfTotal > 0 ? pfVals[i] / pfTotal : 0;
+                    const len = pct * pfCirc;
+                    const offset = pfCirc / 4 - pfCumul;
+                    pfCumul += len;
+                    return { label: r.type, pct, len, offset, color: pfColors[i % pfColors.length], val: pfVals[i] };
+                  });
+                  return (
                   <div style={{ animation: 'fadeIn 0.25s ease' }}>
+                    {/* Charts Row */}
+                    <div className="charts-grid-2x2" style={{ gridTemplateColumns: '1fr 1fr', marginBottom: 20 }}>
+                      {/* Horizontal Bar Chart */}
+                      <div className="chart-card-fidelity">
+                        <div className="chart-title-fidelity">Fee Breakdown — Bar Chart</div>
+                        <div className="chart-svg-container">
+                          <svg viewBox="0 0 360 220" width="100%" height="100%" style={{ overflow: 'visible' }}>
+                            {pfRows.map((r, i) => {
+                              const barW = (pfVals[i] / pfMax) * 180;
+                              const y = 18 + i * 32;
+                              return (
+                                <g key={i}>
+                                  <text x="118" y={y + 13} textAnchor="end" fontSize="8" fill="var(--text-muted)" fontWeight="600">{r.type.length > 18 ? r.type.slice(0, 18) + '…' : r.type}</text>
+                                  <rect x="124" y={y} width={Math.max(barW, 2)} height="20" rx="3" fill={pfColors[i % pfColors.length]} opacity="0.85" />
+                                  <text x={130 + Math.max(barW, 2)} y={y + 14} fontSize="8" fill="var(--text-main)" fontWeight="700">{r.total}</text>
+                                </g>
+                              );
+                            })}
+                          </svg>
+                        </div>
+                      </div>
+                      {/* Donut Chart */}
+                      <div className="chart-card-fidelity">
+                        <div className="chart-title-fidelity">Fee Composition — Donut</div>
+                        <div className="chart-svg-container">
+                          <svg viewBox="0 0 200 200" width="100%" height="190">
+                            {pfSlices.filter(s => s.pct > 0).map((s, i) => (
+                              <circle key={i} cx="100" cy="100" r="55" fill="none" stroke={s.color} strokeWidth="32"
+                                strokeDasharray={`${s.len} ${pfCirc - s.len}`} strokeDashoffset={s.offset}
+                                style={{ transform: 'rotate(-90deg)', transformOrigin: '100px 100px' }} />
+                            ))}
+                            <circle cx="100" cy="100" r="37" fill="var(--bg-secondary)" />
+                            <text x="100" y="96" textAnchor="middle" fontSize="9" fill="var(--text-muted)" fontWeight="700">Total Fees</text>
+                            <text x="100" y="112" textAnchor="middle" fontSize="12" fill="var(--text-main)" fontWeight="800">£{pfTotal.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</text>
+                          </svg>
+                        </div>
+                        <div className="chart-legend-fidelity" style={{ flexWrap: 'wrap' }}>
+                          {pfSlices.filter(s => s.pct > 0.02).map((s, i) => (
+                            <span key={i} className="legend-item-fidelity"><span className="legend-color-box" style={{ background: s.color }} />{s.label.length > 16 ? s.label.slice(0, 16) + '…' : s.label}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                     <div className="detail-table-card">
                       <div className="detail-table-title">Pharmacy Fees Breakdown — {selectedMonth}</div>
                       <table className="premium-table">
                         <thead><tr><th>Fee Type</th><th>Items</th><th>Rate (£)</th><th>Total (£)</th></tr></thead>
                         <tbody>
-                          {(activeMonthData.subTabs?.pharmacyFees || []).map(r => (
+                          {pfRows.map(r => (
                             <tr key={r.type}>
                               <td>{r.type}</td>
                               <td style={{ fontWeight: 600 }}>{r.items.toLocaleString()}</td>
@@ -1415,10 +1474,29 @@ export default function Dashboard() {
                       </table>
                     </div>
                   </div>
-                )}
+                  );
+                })()}
 
                 {/* ══ DRUG COSTS SUB-TAB ══ */}
-                {activeSubTab === 'Drug Costs' && (
+                {activeSubTab === 'Drug Costs' && (() => {
+                  const dcRows = activeMonthData.subTabs?.drugCosts || [];
+                  const dcItemVals = dcRows.map(r => r.items || 0);
+                  const dcFinalVals = dcRows.map(r => parseFloat((r.final || '£0').replace(/[£,]/g, '')) || 0);
+                  const dcNetVals = dcRows.map(r => parseFloat((r.net || '£0').replace(/[£,]/g, '')) || 0);
+                  const dcDiscVals = dcRows.map(r => parseFloat((r.disc || '£0').replace(/[£,]/g, '')) || 0);
+                  const dcMaxFinal = Math.max(...dcFinalVals, 1);
+                  const dcColors = ['#005EB8', '#128274', '#F59E0B', '#7C3AED'];
+                  const dcTotalFinal = dcFinalVals.reduce((s, v) => s + v, 0);
+                  const dcDonutCirc = 2 * Math.PI * 55;
+                  let dcCumul = 0;
+                  const dcSlices = dcRows.map((r, i) => {
+                    const pct = dcTotalFinal > 0 ? dcFinalVals[i] / dcTotalFinal : 0;
+                    const len = pct * dcDonutCirc;
+                    const offset = dcDonutCirc / 4 - dcCumul;
+                    dcCumul += len;
+                    return { label: r.cat, pct, len, offset, color: dcColors[i % dcColors.length], val: dcFinalVals[i] };
+                  });
+                  return (
                   <div style={{ animation: 'fadeIn 0.25s ease' }}>
                     <div className="fp34-metrics-grid-2" style={{ marginBottom: 20 }}>
                       {[
@@ -1433,12 +1511,75 @@ export default function Dashboard() {
                         </div>
                       ))}
                     </div>
+                    {/* Charts Row */}
+                    <div className="charts-grid-2x2" style={{ gridTemplateColumns: '1fr 1fr', marginBottom: 20 }}>
+                      {/* Vertical Bar Chart: Net vs Discount vs Final */}
+                      <div className="chart-card-fidelity">
+                        <div className="chart-title-fidelity">Cost Breakdown by Category</div>
+                        <div className="chart-svg-container">
+                          <svg viewBox="0 0 340 210" width="100%" height="100%" style={{ overflow: 'visible' }}>
+                            <defs>
+                              <linearGradient id="dcNetG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#005EB8" stopOpacity="0.9" /><stop offset="100%" stopColor="#005EB8" stopOpacity="0.4" /></linearGradient>
+                              <linearGradient id="dcDiscG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#EF4444" stopOpacity="0.9" /><stop offset="100%" stopColor="#EF4444" stopOpacity="0.4" /></linearGradient>
+                              <linearGradient id="dcFinalG" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#128274" stopOpacity="0.9" /><stop offset="100%" stopColor="#128274" stopOpacity="0.4" /></linearGradient>
+                            </defs>
+                            {/* Grid lines */}
+                            {[0, 0.25, 0.5, 0.75, 1].map((t, i) => {
+                              const gy = 15 + (1 - t) * 140;
+                              const gv = Math.round(t * dcMaxFinal);
+                              return (<g key={i}><line x1="55" y1={gy} x2="320" y2={gy} stroke="var(--divider-color)" strokeWidth="1" strokeDasharray="3" /><text x="50" y={gy + 3} textAnchor="end" fontSize="7" fill="var(--text-muted)" fontWeight="600">£{gv >= 1000 ? (gv / 1000).toFixed(1) + 'K' : gv}</text></g>);
+                            })}
+                            <line x1="55" x2="320" y1="155" y2="155" stroke="var(--divider-color)" strokeWidth="1.5" />
+                            {dcRows.map((r, i) => {
+                              const groupX = 75 + i * 65;
+                              const hNet = (dcNetVals[i] / dcMaxFinal) * 140;
+                              const hDisc = (dcDiscVals[i] / dcMaxFinal) * 140;
+                              const hFinal = (dcFinalVals[i] / dcMaxFinal) * 140;
+                              return (
+                                <g key={i}>
+                                  <rect x={groupX} y={155 - hNet} width="14" height={Math.max(hNet, 1)} rx="2" fill="url(#dcNetG)" />
+                                  <rect x={groupX + 16} y={155 - hDisc} width="14" height={Math.max(hDisc, 1)} rx="2" fill="url(#dcDiscG)" />
+                                  <rect x={groupX + 32} y={155 - hFinal} width="14" height={Math.max(hFinal, 1)} rx="2" fill="url(#dcFinalG)" />
+                                  <text x={groupX + 23} y="170" textAnchor="middle" fontSize="6.5" fill="var(--text-muted)" fontWeight="600">{r.cat.split(' ')[0]}</text>
+                                </g>
+                              );
+                            })}
+                          </svg>
+                        </div>
+                        <div className="chart-legend-fidelity">
+                          <span className="legend-item-fidelity"><span className="legend-color-box" style={{ background: '#005EB8' }} />Net Cost</span>
+                          <span className="legend-item-fidelity"><span className="legend-color-box" style={{ background: '#EF4444' }} />Discount</span>
+                          <span className="legend-item-fidelity"><span className="legend-color-box" style={{ background: '#128274' }} />Final</span>
+                        </div>
+                      </div>
+                      {/* Donut Chart: Cost Composition */}
+                      <div className="chart-card-fidelity">
+                        <div className="chart-title-fidelity">Cost Composition</div>
+                        <div className="chart-svg-container">
+                          <svg viewBox="0 0 200 200" width="100%" height="190">
+                            {dcSlices.filter(s => s.pct > 0).map((s, i) => (
+                              <circle key={i} cx="100" cy="100" r="55" fill="none" stroke={s.color} strokeWidth="32"
+                                strokeDasharray={`${s.len} ${dcDonutCirc - s.len}`} strokeDashoffset={s.offset}
+                                style={{ transform: 'rotate(-90deg)', transformOrigin: '100px 100px' }} />
+                            ))}
+                            <circle cx="100" cy="100" r="37" fill="var(--bg-secondary)" />
+                            <text x="100" y="96" textAnchor="middle" fontSize="9" fill="var(--text-muted)" fontWeight="700">Drug Costs</text>
+                            <text x="100" y="112" textAnchor="middle" fontSize="11" fill="var(--text-main)" fontWeight="800">£{(dcTotalFinal / 1000).toFixed(1)}K</text>
+                          </svg>
+                        </div>
+                        <div className="chart-legend-fidelity" style={{ flexWrap: 'wrap' }}>
+                          {dcSlices.filter(s => s.pct > 0).map((s, i) => (
+                            <span key={i} className="legend-item-fidelity"><span className="legend-color-box" style={{ background: s.color }} />{s.label.split('(')[0].trim()}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                     <div className="detail-table-card">
                       <div className="detail-table-title">Drug Cost Detail — {selectedMonth}</div>
                       <table className="premium-table">
                         <thead><tr><th>Category</th><th>Items</th><th>Net Cost</th><th>Discount</th><th>Final</th></tr></thead>
                         <tbody>
-                          {(activeMonthData.subTabs?.drugCosts || []).map(r => (
+                          {dcRows.map(r => (
                             <tr key={r.cat}>
                               <td>{r.cat}</td>
                               <td>{r.items.toLocaleString()}</td>
@@ -1455,17 +1596,76 @@ export default function Dashboard() {
                       </table>
                     </div>
                   </div>
-                )}
+                  );
+                })()}
 
                 {/* ══ DISCOUNTS SUB-TAB ══ */}
-                {activeSubTab === 'Discounts' && (
+                {activeSubTab === 'Discounts' && (() => {
+                  const disRows = activeMonthData.subTabs?.discounts || [];
+                  const disVals = disRows.map(r => parseFloat((r.amt || '£0').replace(/[£,]/g, '')) || 0);
+                  const disMax = Math.max(...disVals, 1);
+                  const disTotal = disVals.reduce((s, v) => s + v, 0);
+                  const disColors = ['#EF4444', '#F59E0B', '#7C3AED', '#005EB8'];
+                  const disDonutCirc = 2 * Math.PI * 55;
+                  let disCumul = 0;
+                  const disSlices = disRows.map((r, i) => {
+                    const pct = disTotal > 0 ? disVals[i] / disTotal : 0;
+                    const len = pct * disDonutCirc;
+                    const offset = disDonutCirc / 4 - disCumul;
+                    disCumul += len;
+                    return { label: r.type, pct, len, offset, color: disColors[i % disColors.length], val: disVals[i] };
+                  });
+                  return (
                   <div style={{ animation: 'fadeIn 0.25s ease' }}>
+                    {/* Charts Row */}
+                    <div className="charts-grid-2x2" style={{ gridTemplateColumns: '1fr 1fr', marginBottom: 20 }}>
+                      {/* Horizontal Bar Chart */}
+                      <div className="chart-card-fidelity">
+                        <div className="chart-title-fidelity">Deduction Amounts</div>
+                        <div className="chart-svg-container">
+                          <svg viewBox="0 0 360 160" width="100%" height="100%" style={{ overflow: 'visible' }}>
+                            {disRows.map((r, i) => {
+                              const barW = disMax > 0 ? (disVals[i] / disMax) * 180 : 0;
+                              const y = 18 + i * 40;
+                              return (
+                                <g key={i}>
+                                  <text x="120" y={y + 15} textAnchor="end" fontSize="8" fill="var(--text-muted)" fontWeight="600">{r.type.length > 22 ? r.type.slice(0, 22) + '…' : r.type}</text>
+                                  <rect x="126" y={y} width={Math.max(barW, 2)} height="24" rx="4" fill={disColors[i % disColors.length]} opacity="0.8" />
+                                  <text x={132 + Math.max(barW, 2)} y={y + 16} fontSize="8.5" fill="var(--text-main)" fontWeight="700">{disVals[i] > 0 ? `-£${disVals[i].toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '£0.00'}</text>
+                                </g>
+                              );
+                            })}
+                          </svg>
+                        </div>
+                      </div>
+                      {/* Donut */}
+                      <div className="chart-card-fidelity">
+                        <div className="chart-title-fidelity">Deduction Composition</div>
+                        <div className="chart-svg-container">
+                          <svg viewBox="0 0 200 200" width="100%" height="190">
+                            {disSlices.filter(s => s.pct > 0).map((s, i) => (
+                              <circle key={i} cx="100" cy="100" r="55" fill="none" stroke={s.color} strokeWidth="32"
+                                strokeDasharray={`${s.len} ${disDonutCirc - s.len}`} strokeDashoffset={s.offset}
+                                style={{ transform: 'rotate(-90deg)', transformOrigin: '100px 100px' }} />
+                            ))}
+                            <circle cx="100" cy="100" r="37" fill="var(--bg-secondary)" />
+                            <text x="100" y="96" textAnchor="middle" fontSize="9" fill="var(--text-muted)" fontWeight="700">Total</text>
+                            <text x="100" y="112" textAnchor="middle" fontSize="11" fill="#EF4444" fontWeight="800">-£{disTotal.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</text>
+                          </svg>
+                        </div>
+                        <div className="chart-legend-fidelity" style={{ flexWrap: 'wrap' }}>
+                          {disSlices.filter(s => s.pct > 0).map((s, i) => (
+                            <span key={i} className="legend-item-fidelity"><span className="legend-color-box" style={{ background: s.color }} />{s.label.length > 20 ? s.label.slice(0, 20) + '…' : s.label}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                     <div className="detail-table-card">
                       <div className="detail-table-title">Discount Schedule — {selectedMonth}</div>
                       <table className="premium-table">
                         <thead><tr><th>Discount Type</th><th>Items</th><th>Amount Deducted</th><th>Note</th></tr></thead>
                         <tbody>
-                          {(activeMonthData.subTabs?.discounts || []).map(r => (
+                          {disRows.map(r => (
                             <tr key={r.type}>
                               <td>{r.type}</td>
                               <td>{r.items.toLocaleString()}</td>
@@ -1478,13 +1678,7 @@ export default function Dashboard() {
                           <tr style={{ borderTop: '2px solid var(--divider-color)' }}>
                             <td><strong>Total Deductions</strong></td><td></td>
                             <td style={{ fontWeight: 800, color: '#EF4444' }}>
-                              {(() => {
-                                const totalDeductions = (activeMonthData.subTabs?.discounts || []).reduce((sum, item) => {
-                                  const parsed = parseFloat(item.amt.replace(/[£,]/g, '')) || 0;
-                                  return sum + parsed;
-                                }, 0);
-                                return totalDeductions > 0 ? `-£${totalDeductions.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '£0.00';
-                              })()}
+                              {disTotal > 0 ? `-£${disTotal.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` : '£0.00'}
                             </td>
                             <td></td>
                           </tr>
@@ -1492,10 +1686,19 @@ export default function Dashboard() {
                       </table>
                     </div>
                   </div>
-                )}
+                  );
+                })()}
 
                 {/* ══ CLINICAL SERVICES SUB-TAB ══ */}
-                {activeSubTab === 'Clinical Services' && (
+                {activeSubTab === 'Clinical Services' && (() => {
+                  const csRows = activeMonthData.subTabs?.clinicalServices || [];
+                  const csVolVals = csRows.map(r => r.vol || 0);
+                  const csClaimedVals = csRows.map(r => parseFloat((r.claimed || '£0').replace(/[£,]/g, '')) || 0);
+                  const csMaxVol = Math.max(...csVolVals, 1);
+                  const csMaxClaimed = Math.max(...csClaimedVals, 1);
+                  const csTotalClaimed = csClaimedVals.reduce((s, v) => s + v, 0);
+                  const csColors = ['#005EB8', '#7C3AED', '#128274', '#F59E0B', '#EF4444'];
+                  return (
                   <div style={{ animation: 'fadeIn 0.25s ease' }}>
                     <div className="fp34-metrics-grid-2" style={{ marginBottom: 20 }}>
                       {[
@@ -1510,12 +1713,81 @@ export default function Dashboard() {
                         </div>
                       ))}
                     </div>
+                    {/* Charts Row */}
+                    <div className="charts-grid-2x2" style={{ gridTemplateColumns: '1fr 1fr', marginBottom: 20 }}>
+                      {/* Volume Bar Chart */}
+                      <div className="chart-card-fidelity">
+                        <div className="chart-title-fidelity">Service Volume</div>
+                        <div className="chart-svg-container">
+                          <svg viewBox="0 0 340 210" width="100%" height="100%" style={{ overflow: 'visible' }}>
+                            <defs>
+                              {csColors.map((c, i) => (
+                                <linearGradient key={i} id={`csVolG${i}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={c} stopOpacity="0.9" /><stop offset="100%" stopColor={c} stopOpacity="0.35" /></linearGradient>
+                              ))}
+                            </defs>
+                            {/* Grid */}
+                            {[0, 0.25, 0.5, 0.75, 1].map((t, i) => {
+                              const gy = 15 + (1 - t) * 145;
+                              return (<g key={i}><line x1="40" y1={gy} x2="320" y2={gy} stroke="var(--divider-color)" strokeWidth="1" strokeDasharray="3" /><text x="36" y={gy + 3} textAnchor="end" fontSize="7" fill="var(--text-muted)" fontWeight="600">{Math.round(t * csMaxVol)}</text></g>);
+                            })}
+                            <line x1="40" x2="320" y1="160" y2="160" stroke="var(--divider-color)" strokeWidth="1.5" />
+                            {csRows.map((r, i) => {
+                              const bw = csRows.length <= 3 ? 42 : 30;
+                              const gap = csRows.length <= 3 ? 85 : 55;
+                              const x = 55 + i * gap;
+                              const h = (csVolVals[i] / csMaxVol) * 145;
+                              return (
+                                <g key={i}>
+                                  <rect x={x} y={160 - h} width={bw} height={Math.max(h, 1)} rx="3" fill={`url(#csVolG${i})`} />
+                                  <text x={x + bw / 2} y={160 - h - 5} textAnchor="middle" fontSize="8" fill="var(--text-muted)" fontWeight="700">{csVolVals[i]}</text>
+                                  <text x={x + bw / 2} y="175" textAnchor="middle" fontSize="6.5" fill="var(--text-muted)" fontWeight="600">{r.svc.split('(')[0].trim().split(' ').slice(0, 2).join(' ')}</text>
+                                </g>
+                              );
+                            })}
+                          </svg>
+                        </div>
+                      </div>
+                      {/* Revenue Claimed Bar Chart */}
+                      <div className="chart-card-fidelity">
+                        <div className="chart-title-fidelity">Revenue Claimed (£)</div>
+                        <div className="chart-svg-container">
+                          <svg viewBox="0 0 340 210" width="100%" height="100%" style={{ overflow: 'visible' }}>
+                            <defs>
+                              {csColors.map((c, i) => (
+                                <linearGradient key={i} id={`csClG${i}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={c} stopOpacity="0.9" /><stop offset="100%" stopColor={c} stopOpacity="0.35" /></linearGradient>
+                              ))}
+                            </defs>
+                            {[0, 0.25, 0.5, 0.75, 1].map((t, i) => {
+                              const gy = 15 + (1 - t) * 145;
+                              const gv = Math.round(t * csMaxClaimed);
+                              return (<g key={i}><line x1="45" y1={gy} x2="320" y2={gy} stroke="var(--divider-color)" strokeWidth="1" strokeDasharray="3" /><text x="42" y={gy + 3} textAnchor="end" fontSize="7" fill="var(--text-muted)" fontWeight="600">£{gv >= 1000 ? (gv / 1000).toFixed(1) + 'K' : gv}</text></g>);
+                            })}
+                            <line x1="45" x2="320" y1="160" y2="160" stroke="var(--divider-color)" strokeWidth="1.5" />
+                            {csRows.map((r, i) => {
+                              const bw = csRows.length <= 3 ? 42 : 30;
+                              const gap = csRows.length <= 3 ? 85 : 55;
+                              const x = 60 + i * gap;
+                              const h = (csClaimedVals[i] / csMaxClaimed) * 145;
+                              return (
+                                <g key={i}>
+                                  <rect x={x} y={160 - h} width={bw} height={Math.max(h, 1)} rx="3" fill={`url(#csClG${i})`} />
+                                  <text x={x + bw / 2} y={160 - h - 5} textAnchor="middle" fontSize="7.5" fill="var(--text-muted)" fontWeight="700">£{csClaimedVals[i] >= 1000 ? (csClaimedVals[i] / 1000).toFixed(1) + 'K' : csClaimedVals[i].toFixed(0)}</text>
+                                  <text x={x + bw / 2} y="175" textAnchor="middle" fontSize="6.5" fill="var(--text-muted)" fontWeight="600">{r.svc.split('(')[0].trim().split(' ').slice(0, 2).join(' ')}</text>
+                                </g>
+                              );
+                            })}
+                            {/* Total label */}
+                            <text x="320" y="195" textAnchor="end" fontSize="9" fill="var(--text-main)" fontWeight="800">Total: £{csTotalClaimed.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</text>
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
                     <div className="detail-table-card">
                       <div className="detail-table-title">Clinical Service Activity Log — {selectedMonth}</div>
                       <table className="premium-table">
                         <thead><tr><th>Service</th><th>Volume</th><th>Rate</th><th>Claimed</th><th>Status</th></tr></thead>
                         <tbody>
-                          {(activeMonthData.subTabs?.clinicalServices || []).map(r => (
+                          {csRows.map(r => (
                             <tr key={r.svc}>
                               <td>{r.svc}</td>
                               <td style={{ fontWeight: 700 }}>{r.vol.toLocaleString()}</td>
@@ -1528,18 +1800,73 @@ export default function Dashboard() {
                       </table>
                     </div>
                   </div>
-                )}
+                  );
+                })()}
 
                 {/* ══ EXPENSIVE ITEMS SUB-TAB ══ */}
-                {activeSubTab === 'Expensive Items' && (
+                {activeSubTab === 'Expensive Items' && (() => {
+                  const eiItems = activeMonthData.subTabs?.expensiveItems || [];
+                  const eiPriceVals = eiItems.map(item => parseFloat((item.basicPrice || '£0').replace(/[£,]/g, '')) || 0);
+                  const eiMaxPrice = Math.max(...eiPriceVals, 1);
+                  const eiTotalCost = eiPriceVals.reduce((s, v) => s + v, 0);
+                  const eiColors = ['#005EB8', '#128274', '#7C3AED', '#F59E0B', '#EF4444', '#0078FF'];
+                  return (
                   <div style={{ animation: 'fadeIn 0.25s ease' }}>
+                    {eiItems.length > 0 && (
+                      <div className="charts-grid-2x2" style={{ gridTemplateColumns: '1fr 1fr', marginBottom: 20 }}>
+                        {/* Horizontal Bar Chart */}
+                        <div className="chart-card-fidelity">
+                          <div className="chart-title-fidelity">High-Cost Items Comparison</div>
+                          <div className="chart-svg-container">
+                            <svg viewBox={`0 0 380 ${Math.max(eiItems.length * 36 + 30, 100)}`} width="100%" height="100%" style={{ overflow: 'visible' }}>
+                              {eiItems.map((item, i) => {
+                                const barW = (eiPriceVals[i] / eiMaxPrice) * 170;
+                                const y = 14 + i * 36;
+                                return (
+                                  <g key={i}>
+                                    <text x="125" y={y + 15} textAnchor="end" fontSize="8" fill="var(--text-muted)" fontWeight="600">{item.drugName.length > 20 ? item.drugName.slice(0, 20) + '…' : item.drugName}</text>
+                                    <rect x="130" y={y} width={Math.max(barW, 4)} height="22" rx="3" fill={eiColors[i % eiColors.length]} opacity="0.85" />
+                                    <text x={138 + Math.max(barW, 4)} y={y + 15} fontSize="8.5" fill="var(--text-main)" fontWeight="700">{item.basicPrice}</text>
+                                  </g>
+                                );
+                              })}
+                              <text x="130" y={eiItems.length * 36 + 25} fontSize="9" fill="var(--text-main)" fontWeight="800">Total: £{eiTotalCost.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</text>
+                            </svg>
+                          </div>
+                        </div>
+                        {/* Summary Cards */}
+                        <div className="chart-card-fidelity" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 16, padding: '24px 28px' }}>
+                          <div className="chart-title-fidelity" style={{ marginBottom: 4 }}>Summary</div>
+                          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                            <div className="fp34-card" style={{ borderLeft: '4px solid #005EB8', flex: 1, minWidth: 120 }}>
+                              <div className="fp34-card-title">Total Items</div>
+                              <div className="fp34-card-value">{eiItems.length}</div>
+                            </div>
+                            <div className="fp34-card" style={{ borderLeft: '4px solid #128274', flex: 1, minWidth: 120 }}>
+                              <div className="fp34-card-title">Total Cost</div>
+                              <div className="fp34-card-value">£{eiTotalCost.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</div>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                            <div className="fp34-card" style={{ borderLeft: '4px solid #7C3AED', flex: 1, minWidth: 120 }}>
+                              <div className="fp34-card-title">Avg Price</div>
+                              <div className="fp34-card-value">£{eiItems.length > 0 ? (eiTotalCost / eiItems.length).toLocaleString('en-GB', { minimumFractionDigits: 2 }) : '0.00'}</div>
+                            </div>
+                            <div className="fp34-card" style={{ borderLeft: '4px solid #F59E0B', flex: 1, minWidth: 120 }}>
+                              <div className="fp34-card-title">Highest</div>
+                              <div className="fp34-card-value">£{eiMaxPrice.toLocaleString('en-GB', { minimumFractionDigits: 2 })}</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     <div className="detail-table-card">
                       <div className="detail-table-title">High-Cost Drug Claims — {selectedMonth}</div>
                       <table className="premium-table">
                         <thead><tr><th>Drug Name</th><th>Quantity</th><th>Basic Price</th><th>Endorsement</th><th>NHSBSA Status</th></tr></thead>
                         <tbody>
-                          {activeMonthData.subTabs?.expensiveItems && activeMonthData.subTabs.expensiveItems.length > 0 ? (
-                            activeMonthData.subTabs.expensiveItems.map((item, index) => (
+                          {eiItems.length > 0 ? (
+                            eiItems.map((item, index) => (
                               <tr key={index}>
                                 <td><strong>{item.drugName}</strong></td>
                                 <td>{item.quantity}</td>
@@ -1564,7 +1891,8 @@ export default function Dashboard() {
                       </span>
                     </div>
                   </div>
-                )}
+                  );
+                })()}
 
               </div>
             )}
