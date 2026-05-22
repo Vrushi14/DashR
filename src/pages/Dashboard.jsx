@@ -5,7 +5,7 @@ import {
   LayoutDashboard, FileText, CreditCard, BarChart2, Settings,
   LogOut, Sun, Moon, Download, MapPin,
   ShieldCheck, Loader2, Trash2, Trophy, Sparkles,
-  Plus, RefreshCw
+  Plus, RefreshCw, Upload
 } from 'lucide-react';
 
 const API = import.meta.env.VITE_API_URL || '';
@@ -924,6 +924,9 @@ export default function Dashboard() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>Updated 21 May 2026</span>
+                    <button className="btn-export" onClick={() => fileInputRef.current?.click()}>
+                      <Upload size={13} /> Upload FP34 PDF
+                    </button>
                     <button className="btn-export" onClick={() => downloadDoc(`DashRx_FP34_${odsCode}_${selectedMonth.replace(' ', '_')}.doc`, auditHTML())}>
                       <Download size={13} /> Export
                     </button>
