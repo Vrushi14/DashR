@@ -185,11 +185,7 @@ app.get('/api/invoices/:userId', async (req, res) => {
       [req.params.userId]
     );
     if (result.rows.length === 0) {
-      return res.json([
-        { id: 'demo-1', distributor: 'Alliance Healthcare', bill_no: 'ALL/LON/9482', date: '15 May 2026', amount: '£2,452.10', vat_slab: '20% VAT', leakage: '£31.20', leakage_type: 'Rate Difference', status: 'Action Required' },
-        { id: 'demo-2', distributor: 'AAH Pharmaceuticals', bill_no: 'AAH/DIS/40291', date: '12 May 2026', amount: '£1,124.50', vat_slab: '20% VAT', leakage: '£8.20', leakage_type: 'Scheme Shortfall', status: 'Action Required' },
-        { id: 'demo-3', distributor: 'Phoenix Medical', bill_no: 'PHX/7821-W', date: '08 May 2026', amount: '£845.00', vat_slab: '20% VAT', leakage: '£0', leakage_type: 'Fully Matched', status: 'Fully Matched' }
-      ]);
+      return res.json([]);
     }
     res.json(result.rows);
   } catch (err) {

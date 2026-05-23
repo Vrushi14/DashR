@@ -57,22 +57,28 @@ function parseCSVToFP34(csvText) {
   return data;
 }
 
+// Returns null when no real data is available — mock generation removed
 function generateCompleteFP34Data(monthStr, overrides = {}) {
-  const base = getFP34DataForMonth(monthStr);
-  const baseItems = overrides.totalItems !== undefined ? overrides.totalItems : parseInt(base.metrics.totalItems.replace(/,/g, '')) || 5000;
+  // Build from overrides only; if no real fields present, return null
+  const hasRealData = Object.keys(overrides).some(k =>
+    ['totalItems', 'rxForms', 'drugCosts', 'feesEarned', 'totalAccount', 'advanceRecovery', 'netPayment'].includes(k)
+  );
+  if (!hasRealData) return null;
+
+  const baseItems = overrides.totalItems !== undefined ? overrides.totalItems : 0;
   const rxForms = overrides.rxForms !== undefined ? overrides.rxForms : Math.round(baseItems * 0.55);
   const eRxForms = overrides.eRxForms !== undefined ? overrides.eRxForms : Math.round(rxForms * 0.94);
-  const avgVal = overrides.avgItemValue !== undefined ? overrides.avgItemValue : parseFloat(base.metrics.avgItemValue.replace('£', '')) || 8.50;
+  const avgVal = overrides.avgItemValue !== undefined ? overrides.avgItemValue : 0;
 
-  const drugApplianceCosts = overrides.drugCosts !== undefined ? overrides.drugCosts * 1000 : parseFloat((baseItems * avgVal).toFixed(2));
+  const drugApplianceCosts = overrides.drugCosts !== undefined ? overrides.drugCosts * 1000 : 0;
   const dispensingFee = parseFloat((baseItems * 1.27).toFixed(2));
   const professionalFee = parseFloat((baseItems * 0.74).toFixed(2));
   const transitionPayment = parseFloat((baseItems * 0.08).toFixed(2));
 
-  const clinicalNMS = overrides.nms !== undefined ? overrides.nms : base.charts.clinicalActivity.nms || 40;
-  const clinicalCPCS = overrides.cpcs !== undefined ? overrides.cpcs : base.charts.clinicalActivity.cpcs || 300;
-  const fluVacs = overrides.fluVacs !== undefined ? overrides.fluVacs : base.charts.clinicalActivity.fluVacs || 0;
-  const covidVacs = overrides.covidVacs !== undefined ? overrides.covidVacs : base.charts.clinicalActivity.covidVacs || 0;
+  const clinicalNMS = overrides.nms !== undefined ? overrides.nms : 0;
+  const clinicalCPCS = overrides.cpcs !== undefined ? overrides.cpcs : 0;
+  const fluVacs = overrides.fluVacs !== undefined ? overrides.fluVacs : 0;
+  const covidVacs = overrides.covidVacs !== undefined ? overrides.covidVacs : 0;
 
   const clinicalNMSClaim = clinicalNMS * 20.00;
   const clinicalCPCSClaim = clinicalCPCS * 14.00;
@@ -81,10 +87,10 @@ function generateCompleteFP34Data(monthStr, overrides = {}) {
 
   const total = parseFloat((drugApplianceCosts + totalFees).toFixed(2));
   const charges = overrides.charges !== undefined ? overrides.charges : parseFloat((-1 * (baseItems * 0.09 * 9.65)).toFixed(2));
-  const totalAccount = overrides.totalAccount !== undefined ? overrides.totalAccount : parseFloat((total + charges).toFixed(2));
+  const totalAccount = overrides.totalAccount !== undefined ? overrides.totalAccount * 1000 : parseFloat((total + charges).toFixed(2));
 
-  const advanceRecovery = overrides.advanceRecovery !== undefined ? overrides.advanceRecovery : parseFloat((-1 * (totalAccount * 0.85)).toFixed(2));
-  const netPaymentMade = overrides.netPayment !== undefined ? overrides.netPayment : parseFloat((totalAccount + advanceRecovery).toFixed(2));
+  const advanceRecovery = overrides.advanceRecovery !== undefined ? overrides.advanceRecovery * 1000 : parseFloat((-1 * (totalAccount * 0.85)).toFixed(2));
+  const netPaymentMade = overrides.netPayment !== undefined ? overrides.netPayment * 1000 : parseFloat((totalAccount + advanceRecovery).toFixed(2));
 
   const lppAuthorised = parseFloat((drugApplianceCosts * 0.25).toFixed(2));
   const nhsbsaAuthorised = parseFloat((totalAccount * 1.12).toFixed(2));
@@ -101,7 +107,7 @@ function generateCompleteFP34Data(monthStr, overrides = {}) {
       rxForms: rxForms.toLocaleString(),
       eRxForms: eRxForms.toLocaleString(),
       totalItems: baseItems.toLocaleString(),
-      avgItemValue: `£${avgVal.toFixed(2)}`
+      avgItemValue: avgVal ? `£${avgVal.toFixed(2)}` : '—'
     },
     paymentSummary: {
       drugApplianceCosts,
@@ -141,7 +147,7 @@ function generateCompleteFP34Data(monthStr, overrides = {}) {
         zeroDiscount: Math.round(baseItems * 0.05),
         stdDiscount: Math.round(baseItems * 0.95),
         totalItems: baseItems,
-        hasData: true
+        hasData: baseItems > 0
       },
       clinicalActivity: {
         nms: clinicalNMS,
@@ -171,241 +177,21 @@ function generateCompleteFP34Data(monthStr, overrides = {}) {
         { type: 'Pharmacy Charges', items: Math.round(baseItems * 0.09), amt: `£${Math.abs(charges).toLocaleString('en-GB', { minimumFractionDigits: 2 })}`, note: 'Patient charges clawback' },
       ],
       clinicalServices: [
-        { svc: 'New Medicine Service (NMS)', vol: clinicalNMS, rate: '£20.00', claimed: `£${clinicalNMSClaim.toLocaleString('en-GB', { minimumFractionDigits: 2 })}`, status: 'Submitted' },
-        { svc: 'CPCS (Urgent Supply)', vol: clinicalCPCS, rate: '£14.00', claimed: `£${clinicalCPCSClaim.toLocaleString('en-GB', { minimumFractionDigits: 2 })}`, status: 'Submitted' },
+        { svc: 'New Medicine Service (NMS)', vol: clinicalNMS, rate: '£20.00', claimed: `£${clinicalNMSClaim.toLocaleString('en-GB', { minimumFractionDigits: 2 })}`, status: clinicalNMS > 0 ? 'Submitted' : 'N/A' },
+        { svc: 'CPCS (Urgent Supply)', vol: clinicalCPCS, rate: '£14.00', claimed: `£${clinicalCPCSClaim.toLocaleString('en-GB', { minimumFractionDigits: 2 })}`, status: clinicalCPCS > 0 ? 'Submitted' : 'N/A' },
         { svc: 'Flu Vaccination (NHS)', vol: fluVacs, rate: '£9.58', claimed: `£${(fluVacs * 9.58).toLocaleString('en-GB', { minimumFractionDigits: 2 })}`, status: fluVacs > 0 ? 'Submitted' : 'N/A' },
         { svc: 'COVID-19 Vaccination', vol: covidVacs, rate: '£12.58', claimed: `£${(covidVacs * 12.58).toLocaleString('en-GB', { minimumFractionDigits: 2 })}`, status: covidVacs > 0 ? 'Submitted' : 'N/A' },
-        { svc: 'Contraception Service', vol: overrides.contraception !== undefined ? overrides.contraception : (base.subTabs?.clinicalServices?.find(s => s.svc.includes('Contraception'))?.vol || 0), rate: '£19.80', claimed: `£${((overrides.contraception !== undefined ? overrides.contraception : (base.subTabs?.clinicalServices?.find(s => s.svc.includes('Contraception'))?.vol || 0)) * 19.80).toLocaleString('en-GB', { minimumFractionDigits: 2 })}`, status: 'Submitted' },
+        { svc: 'Contraception Service', vol: overrides.contraception || 0, rate: '£19.80', claimed: `£${((overrides.contraception || 0) * 19.80).toLocaleString('en-GB', { minimumFractionDigits: 2 })}`, status: (overrides.contraception || 0) > 0 ? 'Submitted' : 'N/A' },
       ],
-      expensiveItems: base.subTabs?.expensiveItems || []
+      expensiveItems: []
     }
   };
 }
 
-function getFP34DataForMonth(monthStr) {
-  const [mName, yStr] = monthStr.split(' ');
-  const year = parseInt(yStr) || 2023;
-  const monthIndex = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].indexOf(mName) || 0;
-  const seed = (year * 12 + monthIndex) % 100;
-
-  if (monthStr === 'Jun 2023') {
-    return {
-      month: 'Jun 2023',
-      metrics: {
-        drugCosts: '£44.1K',
-        feesEarned: '£18.8K',
-        totalAccount: '£62.2K',
-        advanceRecovery: '£-53.1K',
-        netPayment: '£61.2K',
-        rxForms: '0',
-        eRxForms: '0',
-        totalItems: '0',
-        avgItemValue: '£10.18'
-      },
-      paymentSummary: {
-        drugApplianceCosts: 44065.86,
-        totalFees: 18805.64,
-        total: 62871.50,
-        charges: -675.50,
-        totalAccount: 62196.00,
-        advanceRecovery: -53095.90,
-        serviceRecovery: 0.00
-      },
-      amountsAuthorised: {
-        paymentOnAccount: 61963.36,
-        serviceFeeAdvance: 0.00,
-        nhsbsaAuthorised: 71063.46,
-        lppAuthorised: 11660.30,
-        otherAmounts: -21504.57,
-        netPaymentMade: 61219.19
-      },
-      charts: {
-        paymentBreakdown: {
-          drugCosts: 44.1,
-          fees: 18.8,
-          charges: -0.675,
-          recovery: -53.1,
-          netPayment: 61.2
-        },
-        revenueComposition: {
-          drugAppliance: 44.1,
-          prescriptionFees: 18.8,
-          clinicalServices: 11.2,
-          total: 74.2
-        },
-        prescriptionVolume: {
-          rxForms: 0,
-          eRxForms: 0,
-          eItems: 0,
-          zeroDiscount: 0,
-          stdDiscount: 0,
-          totalItems: 0,
-          hasData: false
-        },
-        clinicalActivity: {
-          nms: 52,
-          fluVacs: 0,
-          covidVacs: 0,
-          cpcs: 550
-        }
-      },
-      subTabs: {
-        pharmacyFees: [
-          { type: 'Dispensing Fee', items: 0, rate: '£1.27', total: '£0.00' },
-          { type: 'MDS Dispensing Fee', items: 0, rate: '£1.27', total: '£0.00' },
-          { type: 'EPS Repeat Dispensing', items: 0, rate: '£0.00', total: '£0.00' },
-          { type: 'Advance Payment', items: 1, rate: '£18,805.64', total: '£18,805.64' },
-          { type: 'Professional Fee', items: 0, rate: '£0.74', total: '£0.00' },
-          { type: 'Transition Payment', items: 1, rate: '£0.00', total: '£0.00' },
-        ],
-        drugCosts: [
-          { cat: 'Generic (Category M)', items: 0, net: '£0.00', disc: '£0.00', final: '£0.00' },
-          { cat: 'Branded (Category A)', items: 0, net: '£0.00', disc: '£0.00', final: '£0.00' },
-          { cat: 'Appliances', items: 0, net: '£0.00', disc: '£0.00', final: '£0.00' },
-          { cat: 'Controlled Drugs', items: 0, net: '£0.00', disc: '£0.00', final: '£0.00' },
-        ],
-        discounts: [
-          { type: 'Standard Discount (11.17%)', items: 0, amt: '£0.00', note: 'Category M drugs' },
-          { type: 'Zero Discount', items: 0, amt: '£0.00', note: 'Appliances & OOPs' },
-          { type: 'Pharmacy Charges', items: 1, amt: '£675.50', note: 'Clawback / adjustment' },
-        ],
-        clinicalServices: [
-          { svc: 'New Medicine Service (NMS)', vol: 52, rate: '£20.00', claimed: '£1,040.00', status: 'Submitted' },
-          { svc: 'CPCS (Urgent Supply)', vol: 550, rate: '£14.00', claimed: '£7,700.00', status: 'Submitted' },
-          { svc: 'Flu Vaccination (NHS)', vol: 0, rate: '£9.58', claimed: '£0.00', status: 'N/A' },
-          { svc: 'COVID-19 Vaccination', vol: 0, rate: '£12.58', claimed: '£0.00', status: 'N/A' },
-          { svc: 'Contraception Service', vol: 0, rate: '£19.80', claimed: '£0.00', status: 'N/A' },
-        ],
-        expensiveItems: []
-      }
-    };
-  }
-
-  const baseItems = 4500 + (seed * 47) % 3500;
-  const rxForms = Math.round(baseItems * 0.55);
-  const eRxForms = Math.round(rxForms * 0.94);
-  const avgVal = 7.20 + (seed % 30) * 0.10;
-
-  const drugApplianceCosts = parseFloat((baseItems * avgVal).toFixed(2));
-  const dispensingFee = parseFloat((baseItems * 1.27).toFixed(2));
-  const professionalFee = parseFloat((baseItems * 0.74).toFixed(2));
-  const transitionPayment = parseFloat((baseItems * 0.08).toFixed(2));
-  const clinicalNMS = 30 + (seed % 40);
-  const clinicalCPCS = 200 + (seed % 3) * 120 + (seed % 10) * 8;
-
-  const clinicalNMSClaim = clinicalNMS * 20.00;
-  const clinicalCPCSClaim = clinicalCPCS * 14.00;
-  const totalClinicalFees = clinicalNMSClaim + clinicalCPCSClaim;
-  const totalFees = parseFloat((dispensingFee + professionalFee + transitionPayment + totalClinicalFees).toFixed(2));
-
-  const total = parseFloat((drugApplianceCosts + totalFees).toFixed(2));
-  const charges = parseFloat((-1 * (baseItems * 0.09 * 9.65)).toFixed(2));
-  const totalAccount = parseFloat((total + charges).toFixed(2));
-
-  const advanceRecovery = parseFloat((-1 * (totalAccount * 0.85)).toFixed(2));
-  const netPaymentMade = parseFloat((totalAccount + advanceRecovery).toFixed(2));
-
-  const lppAuthorised = parseFloat((drugApplianceCosts * 0.25).toFixed(2));
-  const nhsbsaAuthorised = parseFloat((totalAccount * 1.12).toFixed(2));
-  const otherAmounts = parseFloat((-1 * (nhsbsaAuthorised - netPaymentMade)).toFixed(2));
-
-  const isVacMonth = ['Sep', 'Oct', 'Nov', 'Dec'].includes(mName);
-  const fluVacs = isVacMonth ? 80 + (seed % 150) : 0;
-  const covidVacs = isVacMonth ? 40 + (seed % 80) : 0;
-
-  return {
-    month: monthStr,
-    metrics: {
-      drugCosts: `£${(drugApplianceCosts / 1000).toFixed(1)}K`,
-      feesEarned: `£${(totalFees / 1000).toFixed(1)}K`,
-      totalAccount: `£${(totalAccount / 1000).toFixed(1)}K`,
-      advanceRecovery: `£${(advanceRecovery / 1000).toFixed(1)}K`,
-      netPayment: `£${(netPaymentMade / 1000).toFixed(1)}K`,
-      rxForms: rxForms.toLocaleString(),
-      eRxForms: eRxForms.toLocaleString(),
-      totalItems: baseItems.toLocaleString(),
-      avgItemValue: `£${avgVal.toFixed(2)}`
-    },
-    paymentSummary: {
-      drugApplianceCosts,
-      totalFees,
-      total,
-      charges,
-      totalAccount,
-      advanceRecovery,
-      serviceRecovery: 0.00
-    },
-    amountsAuthorised: {
-      paymentOnAccount: parseFloat((netPaymentMade * 1.01).toFixed(2)),
-      serviceFeeAdvance: 0.00,
-      nhsbsaAuthorised,
-      lppAuthorised,
-      otherAmounts,
-      netPaymentMade
-    },
-    charts: {
-      paymentBreakdown: {
-        drugCosts: parseFloat((drugApplianceCosts / 1000).toFixed(1)),
-        fees: parseFloat((totalFees / 1000).toFixed(1)),
-        charges: parseFloat((charges / 1000).toFixed(3)),
-        recovery: parseFloat((advanceRecovery / 1000).toFixed(1)),
-        netPayment: parseFloat((netPaymentMade / 1000).toFixed(1))
-      },
-      revenueComposition: {
-        drugAppliance: parseFloat((drugApplianceCosts / 1000).toFixed(1)),
-        prescriptionFees: parseFloat(((totalFees - totalClinicalFees) / 1000).toFixed(1)),
-        clinicalServices: parseFloat((totalClinicalFees / 1000).toFixed(1)),
-        total: parseFloat(((drugApplianceCosts + totalFees) / 1000).toFixed(1))
-      },
-      prescriptionVolume: {
-        rxForms,
-        eRxForms,
-        eItems: baseItems,
-        zeroDiscount: Math.round(baseItems * 0.05),
-        stdDiscount: Math.round(baseItems * 0.95),
-        totalItems: baseItems,
-        hasData: true
-      },
-      clinicalActivity: {
-        nms: clinicalNMS,
-        fluVacs,
-        covidVacs,
-        cpcs: clinicalCPCS
-      }
-    },
-    subTabs: {
-      pharmacyFees: [
-        { type: 'Dispensing Fee', items: baseItems, rate: `£1.27`, total: `£${dispensingFee.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` },
-        { type: 'MDS Dispensing Fee', items: Math.round(baseItems * 0.05), rate: `£1.27`, total: `£${(baseItems * 0.05 * 1.27).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
-        { type: 'EPS Repeat Dispensing', items: Math.round(baseItems * 0.35), rate: `£1.27`, total: `£${(baseItems * 0.35 * 1.27).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
-        { type: 'Advance Payment', items: 1, rate: `£${totalFees.toLocaleString('en-GB', { minimumFractionDigits: 2 })}`, total: `£${totalFees.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` },
-        { type: 'Professional Fee', items: baseItems, rate: `£0.74`, total: `£${professionalFee.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` },
-        { type: 'Transition Payment', items: 1, rate: `£${transitionPayment.toLocaleString('en-GB', { minimumFractionDigits: 2 })}`, total: `£${transitionPayment.toLocaleString('en-GB', { minimumFractionDigits: 2 })}` },
-      ],
-      drugCosts: [
-        { cat: 'Generic (Category M)', items: Math.round(baseItems * 0.62), net: `£${(drugApplianceCosts * 0.62).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, disc: `£${(drugApplianceCosts * 0.62 * 0.1117).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, final: `£${(drugApplianceCosts * 0.62 * 0.8883).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
-        { cat: 'Branded (Category A)', items: Math.round(baseItems * 0.28), net: `£${(drugApplianceCosts * 0.28).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, disc: `£${(drugApplianceCosts * 0.28 * 0.1117).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, final: `£${(drugApplianceCosts * 0.28 * 0.8883).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
-        { cat: 'Appliances', items: Math.round(baseItems * 0.08), net: `£${(drugApplianceCosts * 0.08).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, disc: `£0.00`, final: `£${(drugApplianceCosts * 0.08).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
-        { cat: 'Controlled Drugs', items: Math.round(baseItems * 0.02), net: `£${(drugApplianceCosts * 0.02).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, disc: `£${(drugApplianceCosts * 0.02 * 0.1117).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, final: `£${(drugApplianceCosts * 0.02 * 0.8883).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` },
-      ],
-      discounts: [
-        { type: 'Standard Discount (11.17%)', items: Math.round(baseItems * 0.92), amt: `£${(drugApplianceCosts * 0.92 * 0.1117).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, note: 'Standard discount deduction' },
-        { type: 'Zero Discount', items: Math.round(baseItems * 0.08), amt: '£0.00', note: 'Appliances & OOPs exempt' },
-        { type: 'Pharmacy Charges', items: Math.round(baseItems * 0.09), amt: `£${Math.abs(charges).toLocaleString('en-GB', { minimumFractionDigits: 2 })}`, note: 'Patient charges clawback' },
-      ],
-      clinicalServices: [
-        { svc: 'New Medicine Service (NMS)', vol: clinicalNMS, rate: '£20.00', claimed: `£${clinicalNMSClaim.toLocaleString('en-GB', { minimumFractionDigits: 2 })}`, status: 'Submitted' },
-        { svc: 'CPCS (Urgent Supply)', vol: clinicalCPCS, rate: '£14.00', claimed: `£${clinicalCPCSClaim.toLocaleString('en-GB', { minimumFractionDigits: 2 })}`, status: 'Submitted' },
-        { svc: 'Flu Vaccination (NHS)', vol: fluVacs, rate: '£9.58', claimed: `£${(fluVacs * 9.58).toLocaleString('en-GB', { minimumFractionDigits: 2 })}`, status: fluVacs > 0 ? 'Submitted' : 'N/A' },
-        { svc: 'COVID-19 Vaccination', vol: covidVacs, rate: '£12.58', claimed: `£${(covidVacs * 12.58).toLocaleString('en-GB', { minimumFractionDigits: 2 })}`, status: covidVacs > 0 ? 'Submitted' : 'N/A' },
-        { svc: 'Contraception Service', vol: seed % 2 === 0 ? 5 : 0, rate: '£19.80', claimed: seed % 2 === 0 ? '£99.00' : '£0.00', status: seed % 2 === 0 ? 'Submitted' : 'N/A' },
-      ],
-      expensiveItems: seed % 3 === 0 ? [
-        { drugName: 'Adalimumab 40mg injection', quantity: 2, basicPrice: '£684.50', endorsement: 'PAE Approved', nhsbsaStatus: 'Submitted' },
-        { drugName: 'Somatropin 12mg powder', quantity: 1, basicPrice: '£245.00', endorsement: 'PAE Approved', nhsbsaStatus: 'Submitted' }
-      ] : []
-    }
-  };
+// No mock data generation — returns null always
+// Real data only comes from uploaded PDF/CSV/JSON files via generateCompleteFP34Data
+function getFP34DataForMonth() {
+  return null;
 }
 const SideBtn = ({ tab, icon: Icon, label, activeTab, setActiveTab }) => (
   <button onClick={() => setActiveTab(tab)}
@@ -421,10 +207,10 @@ export default function Dashboard() {
   const storedUser = getUserFromStorage();
 
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [pharmacyName, setPharmacyName] = useState(localStorage.getItem('pharmadash_pharmacy_name') || storedUser?.pharmacy_name || 'Smiths Pharmacy, London');
-  const [userName, setUserName] = useState(localStorage.getItem('pharmadash_user_name') || storedUser?.name || 'John Smith');
-  const [odsCode, setOdsCode] = useState(localStorage.getItem('pharmadash_ods_code') || storedUser?.ods_code || 'FLF77');
-  const [nhsContract, setNhsContract] = useState(localStorage.getItem('pharmadash_nhs_contract') || storedUser?.nhs_contract || 'NHS-2026-UK');
+  const [pharmacyName, setPharmacyName] = useState(localStorage.getItem('pharmadash_pharmacy_name') || storedUser?.pharmacy_name || '');
+  const [userName, setUserName] = useState(localStorage.getItem('pharmadash_user_name') || storedUser?.name || '');
+  const [odsCode, setOdsCode] = useState(localStorage.getItem('pharmadash_ods_code') || storedUser?.ods_code || '');
+  const [nhsContract, setNhsContract] = useState(localStorage.getItem('pharmadash_nhs_contract') || storedUser?.nhs_contract || '');
   const [isDark, setIsDark] = useState(localStorage.getItem('pharmadash_theme') === 'dark');
   const [invoices, setInvoices] = useState([]);
   const [, setLoadingInvoices] = useState(true);
@@ -435,14 +221,14 @@ export default function Dashboard() {
   const [settingsSaved, setSettingsSaved] = useState(false);
   // ── FP34 Dashboard Sub-State ──────────────────────────────────────────────
   const [bannerVisible, setBannerVisible] = useState(true);
-  const [selectedMonth, setSelectedMonth] = useState('Jun 2023');
+  const [selectedMonth, setSelectedMonth] = useState('');
   const [activeSubTab, setActiveSubTab] = useState('Overview');
-  const [monthsList, setMonthsList] = useState(['Jun 2023', 'May 2023', 'Apr 2023', 'Mar 2023', 'Feb 2023', 'Jan 2023']);
+  const [monthsList, setMonthsList] = useState([]);
   const [customFP34Data, setCustomFP34Data] = useState({});
 
   const userId = storedUser?.id;
 
-  const activeMonthData = customFP34Data[selectedMonth] || getFP34DataForMonth(selectedMonth);
+  const activeMonthData = selectedMonth ? customFP34Data[selectedMonth] || null : null;
 
   const hasNewerMonth = monthsList.some(m => {
     const [name, yr] = m.split(' ');
@@ -464,12 +250,8 @@ export default function Dashboard() {
       const data = await res.json();
       setInvoices(Array.isArray(data) ? data : []);
     } catch {
-      // Fallback demo data if server not running
-      setInvoices([
-        { id: 'demo-1', distributor: 'Alliance Healthcare', bill_no: 'ALL/LON/9482', date: '15 May 2026', amount: '£2,452.10', vat_slab: '20% VAT', leakage: '£31.20', leakage_type: 'Rate Difference', status: 'Action Required' },
-        { id: 'demo-2', distributor: 'AAH Pharmaceuticals', bill_no: 'AAH/DIS/40291', date: '12 May 2026', amount: '£1,124.50', vat_slab: '20% VAT', leakage: '£8.20', leakage_type: 'Scheme Shortfall', status: 'Action Required' },
-        { id: 'demo-3', distributor: 'Phoenix Medical', bill_no: 'PHX/7821-W', date: '08 May 2026', amount: '£845.00', vat_slab: '20% VAT', leakage: '£0', leakage_type: 'Fully Matched', status: 'Fully Matched' },
-      ]);
+      // Server unreachable — show empty state, no fake data
+      setInvoices([]);
     } finally {
       setLoadingInvoices(false);
     }
@@ -507,106 +289,15 @@ export default function Dashboard() {
     setUploadedFile('');
   };
 
-  // ── File Upload Simulation ───────────────────────────────────────────────────
-  const triggerUploadSimulation = async (fileName) => {
-    setIsUploading(true);
-    setUploadProgress(10);
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 90) { clearInterval(interval); return 90; }
-        return prev + 20;
-      });
-    }, 250);
-
-    // Simulate OCR delay
-    await new Promise(r => setTimeout(r, 1500));
-    clearInterval(interval);
-    setUploadProgress(100);
-
-    const isFP34 = fileName.toLowerCase().includes('fp34');
-
-    if (isFP34) {
-      // ── Parse FP34 month and year ──
-      const monthsAbbrev = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const monthsFull = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-      let targetMonthName = '';
-      let targetYear = '';
-
-      for (let i = 0; i < 12; i++) {
-        const abbrev = monthsAbbrev[i].toLowerCase();
-        const full = monthsFull[i].toLowerCase();
-        if (fileName.toLowerCase().includes(full) || fileName.toLowerCase().includes(abbrev)) {
-          targetMonthName = monthsAbbrev[i];
-          break;
-        }
-      }
-
-      const yearMatch = fileName.match(/\b(20[2-3][0-9])\b/) || fileName.match(/(20[2-3][0-9])/);
-      if (yearMatch) {
-        targetYear = yearMatch[1];
-      }
-
-      // Defaults
-      if (!targetMonthName) targetMonthName = 'Nov';
-      if (!targetYear) targetYear = '2026';
-
-      const parsedMonthStr = `${targetMonthName} ${targetYear}`;
-      const generatedData = getFP34DataForMonth(parsedMonthStr);
-
-      setCustomFP34Data(prev => ({
-        ...prev,
-        [parsedMonthStr]: generatedData
-      }));
-
-      setMonthsList(prev => {
-        if (prev.includes(parsedMonthStr)) return prev;
-        return [parsedMonthStr, ...prev];
-      });
-
-      setSelectedMonth(parsedMonthStr);
-      setUploadedFile(fileName);
-      setIsUploading(false);
-      setUploadProgress(0);
-      setActiveTab('dashboard');
-
-      alert(`✅ NHS FP34 Schedule Audited Successfully!\n\n` +
-        `Scanned Month: ${parsedMonthStr}\n` +
-        `• Dispensed Items: ${generatedData.metrics.totalItems}\n` +
-        `• Basic Drug Cost: ${generatedData.metrics.drugCosts}\n` +
-        `• Total Fees Earned: ${generatedData.metrics.feesEarned}\n` +
-        `• Net BACS Payment: ${generatedData.metrics.netPayment}\n\n` +
-        `All KPI cards, interactive charts, and sub-tab details have been dynamically generated and updated for ${parsedMonthStr}.`);
-    } else {
-      // ── Process standard supplier invoice ──
-      const newInv = {
-        distributor: fileName.toLowerCase().includes('alliance') ? 'Alliance Healthcare' : 'AAH Pharmaceuticals',
-        bill_no: 'SCAN/' + Date.now().toString().slice(-6),
-        date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
-        amount: '£' + (Math.random() * 2000 + 500).toFixed(2),
-        vat_slab: '20% VAT',
-        leakage: Math.random() > 0.5 ? '£' + (Math.random() * 50 + 5).toFixed(2) : '£0',
-        leakage_type: Math.random() > 0.5 ? 'Rate Difference' : 'Fully Matched',
-        status: Math.random() > 0.5 ? 'Action Required' : 'Fully Matched',
-      };
-      newInv.status = newInv.leakage === '£0' ? 'Fully Matched' : 'Action Required';
-      newInv.leakage_type = newInv.leakage === '£0' ? 'Fully Matched' : 'Rate Difference';
-
-      try {
-        const res = await fetch(`${API}/api/invoices/${userId || 'guest'}`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newInv),
-        });
-        const saved = await res.json();
-        newInv.id = saved.id || ('local-' + Date.now());
-      } catch { newInv.id = 'local-' + Date.now(); }
-
-      setInvoices(prev => [newInv, ...prev]);
-      setUploadedFile(fileName);
-      setIsUploading(false);
-      setUploadProgress(0);
-      setActiveTab('recon');
-
-      alert(`Audit complete for supplier bill "${fileName}". ${newInv.leakage !== '£0' ? 'Margin leakage of ' + newInv.leakage + ' detected!' : 'No discrepancies found.'}`);
-    }
+  // ── Upload error handler — shown when file cannot be parsed ──────────────────
+  const handleUploadParseError = (fileName) => {
+    setIsUploading(false);
+    setUploadProgress(0);
+    alert(
+      `⚠️ Could not extract data from "${fileName}".\n\n` +
+      `Please upload a valid NHS FP34 PDF or a structured CSV/JSON export.\n` +
+      `Tip: Make sure the PDF is text-based (not a scanned image).`
+    );
   };
 
   const processFP34Data = (fileName, data) => {
@@ -647,7 +338,19 @@ export default function Dashboard() {
         }
         
         const generated = generateCompleteFP34Data(monthStr, data);
-        
+
+        if (!generated) {
+          // File parsed but contained no recognisable FP34 fields
+          setIsUploading(false);
+          setUploadProgress(0);
+          alert(
+            `⚠️ No FP34 data found in "${fileName}".\n\n` +
+            `The file was read successfully but did not contain recognisable fields.\n` +
+            `Please upload a valid NHS FP34 PDF, CSV, or JSON export.`
+          );
+          return;
+        }
+
         setCustomFP34Data(prev => ({
           ...prev,
           [monthStr]: generated
@@ -664,14 +367,13 @@ export default function Dashboard() {
         setUploadProgress(0);
         setActiveTab('dashboard');
 
-        alert(`✅ NHS FP34 Custom Data Loaded Successfully!\n\n` +
-          `File Source: ${fileName}\n` +
+        alert(`✅ NHS FP34 Data Loaded Successfully!\n\n` +
+          `File: ${fileName}\n` +
           `Month: ${monthStr}\n` +
           `• Dispensed Items: ${generated.metrics.totalItems}\n` +
           `• Basic Drug Cost: ${generated.metrics.drugCosts}\n` +
           `• Total Fees Earned: ${generated.metrics.feesEarned}\n` +
-          `• Net BACS Payment: ${generated.metrics.netPayment}\n\n` +
-          `All KPI cards, custom SVG charts, and detailed lists have been fully updated.`);
+          `• Net BACS Payment: ${generated.metrics.netPayment}`);
       }
     }, 150);
   };
@@ -760,12 +462,8 @@ export default function Dashboard() {
         const confidence = getExtractionConfidence(parsed);
 
         if (confidence.extracted === 0) {
-          // Fallback: couldn't extract any values — use filename-based generation
-          setUploadProgress(90);
-          await new Promise(r => setTimeout(r, 400));
-          setIsUploading(false);
-          setUploadProgress(0);
-          triggerUploadSimulation(f.name);
+          // Could not extract real data — show error, no fake fallback
+          handleUploadParseError(f.name);
           return;
         }
 
@@ -774,15 +472,12 @@ export default function Dashboard() {
 
       } catch (err) {
         console.error('PDF parse error:', err);
-        // Graceful fallback
-        setIsUploading(false);
-        setUploadProgress(0);
-        triggerUploadSimulation(f.name);
+        handleUploadParseError(f.name);
       }
 
     } else {
-      // Images and other files → simulation based on filename
-      triggerUploadSimulation(f.name);
+      // Images and other unsupported files — show error, no fake data
+      handleUploadParseError(f.name);
     }
   };
 
@@ -820,7 +515,7 @@ export default function Dashboard() {
     // ── Computed Stats ───────────────────────────────────────────────────────────
     const totalBilled = invoices.reduce((s, i) => s + parseFloat((i.amount || '£0').replace(/[£,]/g, '') || 0), 0);
     const totalLeakage = invoices.reduce((s, i) => s + parseFloat((i.leakage || '£0').replace(/[£,]/g, '') || 0), 0);
-    const matchRate = invoices.length ? ((invoices.filter(i => i.status === 'Fully Matched').length / invoices.length) * 100).toFixed(1) : '98.4';
+    const matchRate = invoices.length ? ((invoices.filter(i => i.status === 'Fully Matched').length / invoices.length) * 100).toFixed(1) : null;
 
     // ── Audit HTML ───────────────────────────────────────────────────────────────
     const auditHTML = () => `
@@ -832,44 +527,40 @@ export default function Dashboard() {
     </tbody></table>`;
 
     // ── Leaderboard data ─────────────────────────────────────────────────────────
-    const totalItemsNum = parseInt(activeMonthData.metrics.totalItems.replace(/,/g, '')) || 0;
-    const stdDiscountItems = activeMonthData.charts.prescriptionVolume.stdDiscount || 0;
-    const fluVacsNum = activeMonthData.charts.clinicalActivity.fluVacs || 0;
-    const covidVacsNum = activeMonthData.charts.clinicalActivity.covidVacs || 0;
+    const totalItemsNum = activeMonthData ? (parseInt(activeMonthData.metrics.totalItems.replace(/,/g, '')) || 0) : 0;
+    const stdDiscountItems = activeMonthData ? (activeMonthData.charts.prescriptionVolume.stdDiscount || 0) : 0;
+    const fluVacsNum = activeMonthData ? (activeMonthData.charts.clinicalActivity.fluVacs || 0) : 0;
+    const covidVacsNum = activeMonthData ? (activeMonthData.charts.clinicalActivity.covidVacs || 0) : 0;
     const totalJabs = fluVacsNum + covidVacsNum;
-    const rxFormsNum = activeMonthData.charts.prescriptionVolume.rxForms || 1;
-    const eRxFormsNum = activeMonthData.charts.prescriptionVolume.eRxForms || 0;
-    const eRxRateStr = rxFormsNum > 0 ? ((eRxFormsNum / rxFormsNum) * 100).toFixed(1) + '%' : '91.4%';
+    const rxFormsNum = activeMonthData ? (activeMonthData.charts.prescriptionVolume.rxForms || 0) : 0;
+    const eRxFormsNum = activeMonthData ? (activeMonthData.charts.prescriptionVolume.eRxForms || 0) : 0;
+    const eRxRateStr = rxFormsNum > 0 ? ((eRxFormsNum / rxFormsNum) * 100).toFixed(1) + '%' : null;
 
-    const pctVal = Math.min(99.9, Math.max(15, (totalItemsNum / 8650) * 97));
-    const percentileStr = pctVal.toFixed(1) + '%';
-    const notePercentileStr = `Top ${(100 - pctVal).toFixed(1)}% nationwide`;
-    const serviceScoreVal = Math.min(100, Math.round(((fluVacsNum + covidVacsNum + (activeMonthData.charts.clinicalActivity.nms || 0) * 5 + (activeMonthData.charts.clinicalActivity.cpcs || 0) * 0.1) / 350) * 85));
-    const serviceScore = Math.max(40, Math.min(100, serviceScoreVal));
-    const erxPercent = parseFloat(eRxRateStr) || 91.4;
-    const erxRank = Math.round(Math.max(1, 11600 - (erxPercent / 100) * 11550));
-    const erxRankStr = '#' + erxRank;
-    const marginScore = Math.max(50, Math.min(99, Math.round((serviceScore * 0.4) + (parseFloat(matchRate) * 0.4) + (erxPercent * 0.2))));
+    const pctVal = totalItemsNum > 0 ? Math.min(99.9, Math.max(1, (totalItemsNum / 8650) * 97)) : null;
+    const percentileStr = pctVal !== null ? pctVal.toFixed(1) + '%' : '—';
+    const notePercentileStr = pctVal !== null ? `Top ${(100 - pctVal).toFixed(1)}% nationwide` : 'Upload FP34 data to see ranking';
+    const serviceScoreVal = activeMonthData ? Math.min(100, Math.round(((fluVacsNum + covidVacsNum + (activeMonthData.charts.clinicalActivity.nms || 0) * 5 + (activeMonthData.charts.clinicalActivity.cpcs || 0) * 0.1) / 350) * 85)) : null;
+    const serviceScore = serviceScoreVal !== null ? Math.max(1, Math.min(100, serviceScoreVal)) : null;
+    const erxPercent = eRxRateStr ? parseFloat(eRxRateStr) : null;
+    const erxRank = erxPercent !== null ? Math.round(Math.max(1, 11600 - (erxPercent / 100) * 11550)) : null;
+    const erxRankStr = erxRank !== null ? '#' + erxRank : '—';
+    const marginScore = (serviceScore !== null && matchRate !== null && erxPercent !== null)
+      ? Math.max(1, Math.min(99, Math.round((serviceScore * 0.4) + (parseFloat(matchRate) * 0.4) + (erxPercent * 0.2))))
+      : null;
 
+    // Only show user's own row — no fake competitor pharmacies
     const leaderboards = {
       bills: [
-        { rank: 1, name: 'Boots Pharmacy Central', location: 'London Oxford St', id: 'FLF12', value: '28,490 items' },
-        { rank: 2, name: 'LloydsPharmacy Hub', location: 'Birmingham City', id: 'FLF22', value: '25,120 items' },
-        { rank: 3, name: 'Well Pharmacy', location: 'Manchester Piccadilly', id: 'FLF33', value: '22,940 items' },
-        { rank: Math.max(4, Math.round(11600 - (pctVal / 100) * 11590)), name: pharmacyName, location: 'Your Location', id: odsCode, value: totalItemsNum.toLocaleString() + ' items', isUser: true },
+        ...(totalItemsNum > 0 && pharmacyName ? [{ rank: '—', name: pharmacyName, location: odsCode || '—', id: odsCode || '—', value: totalItemsNum.toLocaleString() + ' items', isUser: true }] : []),
       ],
       chronic: [
-        { rank: 1, name: 'Well Pharmacy', location: 'Manchester', id: 'FLF33', value: '18,520 refills' },
-        { rank: 2, name: 'Boots Pharmacy', location: 'London', id: 'FLF12', value: '17,440 refills' },
-        { rank: Math.max(4, Math.round(11600 - (stdDiscountItems / 18520) * 11590)), name: pharmacyName, location: 'Your Location', id: odsCode, value: stdDiscountItems.toLocaleString() + ' refills', isUser: true },
+        ...(stdDiscountItems > 0 && pharmacyName ? [{ rank: '—', name: pharmacyName, location: odsCode || '—', id: odsCode || '—', value: stdDiscountItems.toLocaleString() + ' refills', isUser: true }] : []),
       ],
       vaccinations: [
-        { rank: 1, name: 'Boots Pharmacy Central', location: 'London', id: 'FLF12', value: '980 jabs' },
-        { rank: Math.max(4, Math.round(11600 - (totalJabs / 980) * 11590)), name: pharmacyName, location: 'Your Location', id: odsCode, value: totalJabs.toLocaleString() + ' jabs', isUser: true },
+        ...(totalJabs > 0 && pharmacyName ? [{ rank: '—', name: pharmacyName, location: odsCode || '—', id: odsCode || '—', value: totalJabs.toLocaleString() + ' jabs', isUser: true }] : []),
       ],
       erx: [
-        { rank: 1, name: 'Well Pharmacy', location: 'Manchester', id: 'FLF33', value: '98.5% digital' },
-        { rank: erxRank, name: pharmacyName, location: 'Your Location', id: odsCode, value: eRxRateStr + ' digital', isUser: true },
+        ...(eRxRateStr && pharmacyName ? [{ rank: erxRankStr, name: pharmacyName, location: odsCode || '—', id: odsCode || '—', value: eRxRateStr + ' digital', isUser: true }] : []),
       ],
     };
 
@@ -925,6 +616,7 @@ export default function Dashboard() {
           </header>
 
           <div className="dashboard-viewport">
+            <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} accept=".pdf,.png,.jpg,.jpeg,.csv" />
 
             {/* ══════════════════ FP34 DASHBOARD ══════════════════ */}
             {activeTab === 'dashboard' && (
@@ -932,14 +624,13 @@ export default function Dashboard() {
 
                 {/* ── Warning Banner ── */}
                 {bannerVisible && (
-                  <div className="warning-banner" style={{ background: hasNewerMonth ? 'rgba(16,185,129,0.06)' : undefined, borderLeft: hasNewerMonth ? '4px solid #10B981' : undefined }}>
+                  <div className="warning-banner" style={{ background: monthsList.length > 0 ? 'rgba(16,185,129,0.06)' : undefined, borderLeft: monthsList.length > 0 ? '4px solid #10B981' : undefined }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, flexWrap: 'wrap' }}>
-                      <span className="warning-banner-text" style={{ color: hasNewerMonth ? '#10B981' : undefined }}>
-                        {hasNewerMonth
-                          ? `🎉 Latest FP34 schedule (${selectedMonth}) has been loaded successfully! All KPIs and charts updated.`
-                          : `⚠️ Your latest data is from Jun 2023 (35 months ago). Upload a new FP34 to stay up to date.`}
+                      <span className="warning-banner-text" style={{ color: monthsList.length > 0 ? '#10B981' : undefined }}>
+                        {monthsList.length > 0
+                          ? `🎉 FP34 schedule (${selectedMonth}) has been loaded successfully! All KPIs and charts updated.`
+                          : `⬆️ No FP34 data loaded yet. Upload your NHS FP34 schedule PDF to view your dashboard.`}
                       </span>
-                      <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} accept=".pdf,.png,.jpg,.jpeg,.csv" />
                       {!hasNewerMonth && (
                         <button className="warning-banner-btn" onClick={() => fileInputRef.current?.click()}>Upload New FP34</button>
                       )}
@@ -990,9 +681,18 @@ export default function Dashboard() {
                   ))}
                 </div>
 
-                {/* ══ OVERVIEW SUB-TAB ══ */}
-                {activeSubTab === 'Overview' && (
-                  <div style={{ animation: 'fadeIn 0.25s ease' }}>
+                {!activeMonthData ? (
+                  <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
+                    <div style={{ fontSize: 48, marginBottom: 16 }}>📄</div>
+                    <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 8, color: 'var(--text-main)' }}>No FP34 Data Loaded</div>
+                    <div style={{ fontSize: 14, maxWidth: 400, margin: '0 auto 24px' }}>Upload your NHS FP34 schedule PDF using the button above to see your payment breakdown, metrics, and charts.</div>
+                    <button className="btn-upload-primary" onClick={() => fileInputRef.current?.click()}>Upload FP34 PDF</button>
+                  </div>
+                ) : (
+                  <>
+                    {/* ══ OVERVIEW SUB-TAB ══ */}
+                    {activeSubTab === 'Overview' && (
+                      <div style={{ animation: 'fadeIn 0.25s ease' }}>
 
                     {/* ── Row 1: 5 Financial Metric Cards ── */}
                     <div className="fp34-metrics-grid-1">
@@ -1893,6 +1593,8 @@ export default function Dashboard() {
                   </div>
                   );
                 })()}
+                  </>
+                )}
 
               </div>
             )}
@@ -1903,7 +1605,6 @@ export default function Dashboard() {
                 <div className="dashboard-viewport-title-row">
                   <h1 className="dashboard-viewport-title">Statement Reconciliation</h1>
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} accept=".pdf,.png,.jpg,.jpeg,.csv" />
                     <button className="btn-upload-primary" onClick={() => fileInputRef.current?.click()}><Plus size={14} /> Upload New Bill</button>
                   </div>
                 </div>
@@ -2028,26 +1729,32 @@ export default function Dashboard() {
                 </div>
                 <div className="charts-grid">
                   <div className="chart-card">
-                    <h3 className="chart-card-title">Top Dispensed Therapeutic Categories</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '8px 0' }}>
-                      {[
-                        { label: 'Cardiovascular (Statins, ACE)', pct: 34, color: '#EF4444' },
-                        { label: 'Diabetes (Metformin, Insulin)', pct: 22, color: '#0078FF' },
-                        { label: 'Respiratory (Inhalers, COPD)', pct: 18, color: '#10B981' },
-                        { label: 'Mental Health (SSRIs, Anxiolytics)', pct: 14, color: '#7C3AED' },
-                        { label: 'OTC & General Wellness', pct: 12, color: '#F59E0B' },
-                      ].map(({ label, pct, color }) => (
-                        <div key={label}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 5 }}>
-                            <span style={{ color: 'var(--text-main)' }}>{label}</span>
-                            <span style={{ fontWeight: 700, color }}>{pct}%</span>
-                          </div>
-                          <div style={{ height: 9, background: 'var(--divider-color)', borderRadius: 4, overflow: 'hidden' }}>
-                            <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 4 }} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <h3 className="chart-card-title">Dispensing Category Breakdown</h3>
+                    {activeMonthData ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '8px 0' }}>
+                        {[
+                          { label: 'Generic (Category M)', val: activeMonthData.charts.prescriptionVolume.stdDiscount || 0, color: '#005EB8' },
+                          { label: 'Zero Discount Items', val: activeMonthData.charts.prescriptionVolume.zeroDiscount || 0, color: '#F59E0B' },
+                          { label: 'EPS Digital (e-Rx)', val: activeMonthData.charts.prescriptionVolume.eRxForms || 0, color: '#10B981' },
+                        ].map(({ label, val, color }) => {
+                          const maxVal = Math.max(activeMonthData.charts.prescriptionVolume.totalItems || 1, 1);
+                          const pct = Math.round((val / maxVal) * 100);
+                          return (
+                            <div key={label}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 5 }}>
+                                <span style={{ color: 'var(--text-main)' }}>{label}</span>
+                                <span style={{ fontWeight: 700, color }}>{val.toLocaleString()} ({pct}%)</span>
+                              </div>
+                              <div style={{ height: 9, background: 'var(--divider-color)', borderRadius: 4, overflow: 'hidden' }}>
+                                <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 4 }} />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--text-muted)', fontSize: 13 }}>Upload FP34 data to view category breakdown.</div>
+                    )}
                   </div>
                   <div className="chart-card">
                     <h3 className="chart-card-title">NHS Services Provided This Month</h3>
@@ -2078,12 +1785,20 @@ export default function Dashboard() {
                 <div className="dashboard-viewport-title-row">
                   <h1 className="dashboard-viewport-title">Pharmacy Comparison — {selectedMonth}</h1>
                 </div>
+                {!activeMonthData ? (
+                  <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
+                    <div style={{ fontSize: 48, marginBottom: 16 }}>📊</div>
+                    <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 8, color: 'var(--text-main)' }}>No FP34 Data Available</div>
+                    <div style={{ fontSize: 14 }}>Upload your NHS FP34 schedule to see your performance benchmarks.</div>
+                  </div>
+                ) : (
+                  <>
                 <div className="stats-grid">
                   {[
                     { title: 'Your Percentile (Items)', value: percentileStr, color: '#0078FF', note: notePercentileStr },
-                    { title: 'District Avg Leakage', value: '£189/mo', color: '#EF4444', note: 'Yours: £' + totalLeakage.toFixed(0) + '/mo' },
-                    { title: 'NHS Service Score', value: serviceScore + '/100', color: '#10B981', note: `▲ +${Math.round(serviceScore * 0.07)} pts this quarter` },
-                    { title: 'EPS Adoption Rank', value: erxRankStr, color: '#7C3AED', note: 'Out of 11,600 pharmacies' },
+                    { title: 'Your Leakage', value: invoices.length > 0 ? '£' + totalLeakage.toFixed(0) + '/mo' : '—', color: '#EF4444', note: invoices.length > 0 ? (totalLeakage > 0 ? 'Raise claims to recover' : 'No leakage detected') : 'Upload invoices to see leakage' },
+                    { title: 'NHS Service Score', value: serviceScore !== null ? serviceScore + '/100' : '—', color: '#10B981', note: serviceScore !== null ? `Based on your clinical activity` : 'Upload FP34 to calculate' },
+                    { title: 'EPS Adoption Rank', value: erxRankStr, color: '#7C3AED', note: erxRank !== null ? 'Based on your EPS rate' : 'Upload FP34 to see rank' },
                   ].map(s => (
                     <div key={s.title} className="stat-card" style={{ borderLeft: `4px solid ${s.color}` }}>
                       <div className="stat-title">{s.title}</div>
@@ -2093,31 +1808,31 @@ export default function Dashboard() {
                   ))}
                 </div>
                 <div className="table-card" style={{ marginTop: 24 }}>
-                  <h3 className="table-card-title">Performance vs. District Peers</h3>
+                  <h3 className="table-card-title">Your Performance Metrics</h3>
                   <div className="responsive-table-wrapper">
                     <table className="premium-table">
-                      <thead><tr><th>Metric</th><th>Your Pharmacy</th><th>District Avg</th><th>National Top 10%</th><th>Status</th></tr></thead>
+                      <thead><tr><th>Metric</th><th>Your Pharmacy</th><th>National Top 10%</th></tr></thead>
                       <tbody>
                         {[
-                          { metric: 'Items/Month', yours: totalItemsNum.toLocaleString(), avg: '4,200', top: '22,000+', good: totalItemsNum >= 4200 },
-                          { metric: 'Supplier Leakage', yours: '£' + totalLeakage.toFixed(0) + '/mo', avg: '£189/mo', top: '<£20/mo', good: totalLeakage < 189 },
-                          { metric: 'FP34 Match Rate', yours: matchRate + '%', avg: '96.2%', top: '99.8%', good: parseFloat(matchRate) >= 96.2 },
-                          { metric: 'EPS Digital Rate', yours: eRxRateStr, avg: '88.5%', top: '98.5%', good: parseFloat(eRxRateStr) >= 88.5 },
-                          { metric: 'Chronic Rx Mix', yours: (totalItemsNum > 0 ? Math.round(stdDiscountItems / totalItemsNum * 100) : 72) + '%', avg: '64%', top: '80%+', good: (totalItemsNum > 0 ? (stdDiscountItems / totalItemsNum) >= 0.64 : true) },
-                          { metric: 'NHS Services Score', yours: serviceScore + '/100', avg: '71/100', top: '95/100', good: serviceScore >= 71 },
+                          { metric: 'Items/Month', yours: totalItemsNum > 0 ? totalItemsNum.toLocaleString() : '—', top: '22,000+' },
+                          { metric: 'Supplier Leakage', yours: invoices.length > 0 ? '£' + totalLeakage.toFixed(0) + '/mo' : '—', top: '<£20/mo' },
+                          { metric: 'FP34 Match Rate', yours: matchRate !== null ? matchRate + '%' : '—', top: '99.8%' },
+                          { metric: 'EPS Digital Rate', yours: eRxRateStr || '—', top: '98.5%' },
+                          { metric: 'Chronic Rx Mix', yours: totalItemsNum > 0 ? Math.round(stdDiscountItems / totalItemsNum * 100) + '%' : '—', top: '80%+' },
+                          { metric: 'NHS Services Score', yours: serviceScore !== null ? serviceScore + '/100' : '—', top: '95/100' },
                         ].map(r => (
                           <tr key={r.metric}>
                             <td><strong>{r.metric}</strong></td>
-                            <td style={{ fontWeight: 700, color: r.good ? '#10B981' : '#EF4444' }}>{r.yours}</td>
-                            <td>{r.avg}</td>
+                            <td style={{ fontWeight: 700 }}>{r.yours}</td>
                             <td style={{ color: '#0078FF', fontWeight: 600 }}>{r.top}</td>
-                            <td><span className={`badge-pill ${r.good ? 'badge-pill-success' : 'badge-pill-warning'}`}>{r.good ? '✓ Above Avg' : '⚠ Below Avg'}</span></td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
                 </div>
+                  </>
+                )}
               </div>
             )}
 
@@ -2125,7 +1840,7 @@ export default function Dashboard() {
             {activeTab === 'leaderboard' && (
               <div style={{ animation: 'fadeIn 0.3s ease' }}>
                 <div className="dashboard-viewport-title-row">
-                  <h1 className="dashboard-viewport-title">National Pharmacy Leaderboard</h1>
+                  <h1 className="dashboard-viewport-title">Pharmacy Performance Tracker</h1>
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
                   {[['bills', 'Items Dispensed'], ['chronic', 'Chronic Rx'], ['vaccinations', 'Vaccinations'], ['erx', 'EPS Rate']].map(([key, label]) => (
@@ -2135,26 +1850,37 @@ export default function Dashboard() {
                   ))}
                 </div>
                 <div className="table-card">
-                  <div className="responsive-table-wrapper">
-                    <table className="premium-table">
-                      <thead><tr><th>Rank</th><th>Pharmacy</th><th>Location</th><th>ODS</th><th>Volume</th></tr></thead>
-                      <tbody>
-                        {(leaderboards[leaderboardMetric] || []).map(p => (
-                          <tr key={p.id} style={{ background: p.isUser ? 'rgba(0,120,255,0.06)' : undefined, fontWeight: p.isUser ? 700 : undefined }}>
-                            <td>
-                              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: '50%', background: p.rank <= 3 ? ['#FFD700', '#C0C0C0', '#CD7F32'][p.rank - 1] : 'var(--divider-color)', color: p.rank <= 3 ? '#1a1a1a' : 'var(--text-muted)', fontWeight: 800, fontSize: 13 }}>
-                                {p.rank <= 3 ? '🏆'.slice(0, p.rank === 1 ? 2 : 0) || p.rank : p.rank}
-                              </span>
-                            </td>
-                            <td>{p.name} {p.isUser && <span style={{ fontSize: 11, background: '#0078FF', color: '#fff', padding: '2px 7px', borderRadius: 10, marginLeft: 6 }}>YOU</span>}</td>
-                            <td>{p.location}</td>
-                            <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{p.id}</td>
-                            <td style={{ fontWeight: 700 }}>{p.value}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  {!activeMonthData ? (
+                    <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+                      <div style={{ fontSize: 36, marginBottom: 12 }}>📈</div>
+                      <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8, color: 'var(--text-main)' }}>No Data Yet</div>
+                      <div style={{ fontSize: 13 }}>Upload your NHS FP34 schedule to track your performance metrics.</div>
+                    </div>
+                  ) : (
+                    <div className="responsive-table-wrapper">
+                      <table className="premium-table">
+                        <thead><tr><th>Rank</th><th>Pharmacy</th><th>ODS</th><th>Volume</th></tr></thead>
+                        <tbody>
+                          {(leaderboards[leaderboardMetric] || []).length === 0 ? (
+                            <tr><td colSpan="4" style={{ textAlign: 'center', padding: '30px 0', color: 'var(--text-muted)', fontSize: 13 }}>No data available for this metric.</td></tr>
+                          ) : (
+                            (leaderboards[leaderboardMetric] || []).map(p => (
+                              <tr key={p.id} style={{ background: p.isUser ? 'rgba(0,120,255,0.06)' : undefined, fontWeight: p.isUser ? 700 : undefined }}>
+                                <td>
+                                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: '50%', background: 'var(--divider-color)', color: 'var(--text-muted)', fontWeight: 800, fontSize: 13 }}>
+                                    {p.rank}
+                                  </span>
+                                </td>
+                                <td>{p.name} {p.isUser && <span style={{ fontSize: 11, background: '#0078FF', color: '#fff', padding: '2px 7px', borderRadius: 10, marginLeft: 6 }}>YOU</span>}</td>
+                                <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{p.id}</td>
+                                <td style={{ fontWeight: 700 }}>{p.value}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -2163,23 +1889,34 @@ export default function Dashboard() {
             {activeTab === 'growth' && (
               <div style={{ animation: 'fadeIn 0.3s ease' }}>
                 <div className="dashboard-viewport-title-row">
-                  <h1 className="dashboard-viewport-title">Instant Growth Report — {selectedMonth}</h1>
-                  <button className="btn-export" onClick={() => printPDF('DashRx Growth Report', growthHTML())}><Download size={13} /> Export PDF</button>
+                  <h1 className="dashboard-viewport-title">Growth Report{selectedMonth ? ` — ${selectedMonth}` : ''}</h1>
+                  {marginScore !== null && (
+                    <button className="btn-export" onClick={() => printPDF('DashRx Growth Report', growthHTML())}><Download size={13} /> Export PDF</button>
+                  )}
                 </div>
+                {marginScore === null ? (
+                  <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
+                    <div style={{ fontSize: 48, marginBottom: 16 }}>🌱</div>
+                    <div style={{ fontWeight: 700, fontSize: 18, marginBottom: 8, color: 'var(--text-main)' }}>Upload Data to See Your Growth Report</div>
+                    <div style={{ fontSize: 14, maxWidth: 420, margin: '0 auto 24px' }}>Your personalised growth report and commercial action plan will appear here once you upload your NHS FP34 schedule and supplier invoices.</div>
+                    <button className="btn-upload-primary" onClick={() => fileInputRef.current?.click()}>Upload FP34 PDF</button>
+                  </div>
+                ) : (
+                  <>
                 {/* Score banner */}
                 <div style={{ background: 'linear-gradient(135deg, #0078FF, #7C3AED)', borderRadius: 12, padding: '28px 32px', marginBottom: 24, color: '#fff' }}>
                   <div style={{ fontSize: 13, fontWeight: 700, opacity: 0.8, marginBottom: 4 }}>MARGIN PERFORMANCE SCORE</div>
                   <div style={{ fontSize: 64, fontWeight: 900, lineHeight: 1 }}>{marginScore}<span style={{ fontSize: 28, fontWeight: 400 }}>/100</span></div>
                   <div style={{ fontSize: 14, opacity: 0.85, marginTop: 8 }}>
-                    Your pharmacy is in the top {Math.max(1, 100 - marginScore)}% of UK NHS pharmacies by margin efficiency. {totalLeakage > 0 ? 'Raise active leakage claims to immediately boost profitability.' : 'Outstanding billing hygiene, keep up the excellent work!'}
+                    {totalLeakage > 0 ? 'Raise active leakage claims to immediately boost profitability.' : 'No leakage detected — outstanding billing hygiene!'}
                   </div>
                 </div>
                 <div className="stats-grid">
                   {[
-                    { title: 'Leakage Recovery Potential', value: '£' + (totalLeakage * 12).toFixed(0) + '/yr', color: '#EF4444', note: 'If all claims are raised' },
-                    { title: 'OTC Mix Opportunity', value: '+£' + Math.round(totalItemsNum * 0.12).toLocaleString() + '/yr', color: '#10B981', note: 'Growing OTC from 28% → 36%' },
-                    { title: 'NHS Service Revenue', value: '+£' + Math.round((100 - serviceScore) * 35).toLocaleString() + '/yr', color: '#0078FF', note: 'By matching Top 10% clinical volume' },
-                    { title: 'EPS Adoption Lift', value: '+£' + Math.max(0, Math.round((95 - erxPercent) * 75)).toLocaleString() + '/yr', color: '#7C3AED', note: 'Reaching 95% digital rate' },
+                    { title: 'Leakage Recovery Potential', value: invoices.length > 0 ? '£' + (totalLeakage * 12).toFixed(0) + '/yr' : '—', color: '#EF4444', note: invoices.length > 0 ? 'If all claims are raised' : 'Upload invoices to calculate' },
+                    { title: 'Items Dispensed (Month)', value: totalItemsNum > 0 ? totalItemsNum.toLocaleString() : '—', color: '#10B981', note: selectedMonth || '' },
+                    { title: 'NHS Service Score', value: serviceScore !== null ? serviceScore + '/100' : '—', color: '#0078FF', note: 'Based on your clinical activity' },
+                    { title: 'EPS Digital Rate', value: eRxRateStr || '—', color: '#7C3AED', note: erxRank !== null ? `Rank ${erxRankStr} of 11,600` : 'Based on FP34 data' },
                   ].map(s => (
                     <div key={s.title} className="stat-card" style={{ borderLeft: `4px solid ${s.color}` }}>
                       <div className="stat-title">{s.title}</div>
@@ -2195,12 +1932,11 @@ export default function Dashboard() {
                       <thead><tr><th>Opportunity</th><th>Current</th><th>Target</th><th>Est. Annual Uplift</th><th>Effort</th></tr></thead>
                       <tbody>
                         {[
-                          { opp: 'Supplier Claim Recovery', curr: '£0 reclaimed', tgt: '£' + totalLeakage.toFixed(0) + '/mo', uplift: '£' + (totalLeakage * 12).toFixed(0) + '/yr', effort: 'Low' },
-                          { opp: 'OTC & Wellness Range', curr: '28% mix', tgt: '36% mix', uplift: '+£' + Math.round(totalItemsNum * 0.12).toLocaleString() + '/yr', effort: 'Medium' },
-                          { opp: 'NHS Advanced Services', curr: serviceScore + '/100', tgt: '95/100', uplift: '+£' + Math.round((95 - serviceScore) * 35).toLocaleString() + '/yr', effort: 'Medium' },
-                          { opp: 'EPS Digital Adoption', curr: eRxRateStr, tgt: '95%', uplift: '+£' + Math.max(0, Math.round((95 - erxPercent) * 75)).toLocaleString() + '/yr', effort: 'Low' },
-                          { opp: 'Chronic Rx Retention', curr: (totalItemsNum > 0 ? Math.round(stdDiscountItems / totalItemsNum * 100) : 72) + '% mix', tgt: '80% mix', uplift: '+£' + Math.round(totalItemsNum * 0.08 * 1.27).toLocaleString() + '/yr', effort: 'Medium' },
-                        ].map(r => (
+                          invoices.length > 0 && { opp: 'Supplier Claim Recovery', curr: '£0 reclaimed', tgt: '£' + totalLeakage.toFixed(0) + '/mo', uplift: '£' + (totalLeakage * 12).toFixed(0) + '/yr', effort: 'Low' },
+                          totalItemsNum > 0 && { opp: 'NHS Advanced Services', curr: serviceScore !== null ? serviceScore + '/100' : '—', tgt: '95/100', uplift: '+£' + Math.round(((serviceScore !== null ? 95 - serviceScore : 0)) * 35).toLocaleString() + '/yr', effort: 'Medium' },
+                          erxPercent !== null && { opp: 'EPS Digital Adoption', curr: eRxRateStr, tgt: '95%', uplift: '+£' + Math.max(0, Math.round((95 - erxPercent) * 75)).toLocaleString() + '/yr', effort: 'Low' },
+                          totalItemsNum > 0 && { opp: 'Chronic Rx Retention', curr: Math.round(stdDiscountItems / totalItemsNum * 100) + '% mix', tgt: '80% mix', uplift: '+£' + Math.round(totalItemsNum * 0.08 * 1.27).toLocaleString() + '/yr', effort: 'Medium' },
+                        ].filter(Boolean).map(r => (
                           <tr key={r.opp}>
                             <td><strong>{r.opp}</strong></td>
                             <td>{r.curr}</td>
@@ -2213,6 +1949,8 @@ export default function Dashboard() {
                     </table>
                   </div>
                 </div>
+                  </>
+                )}
               </div>
             )}
 
@@ -2282,7 +2020,7 @@ export default function Dashboard() {
                   <div>
                     <div style={{ fontSize: 12, fontWeight: 700, opacity: 0.8, marginBottom: 4 }}>CURRENT PLAN</div>
                     <div style={{ fontSize: 28, fontWeight: 900 }}>Pro Growth</div>
-                    <div style={{ fontSize: 14, opacity: 0.85, marginTop: 4 }}>£14.99 / month • Next renewal: 21 Jun 2026</div>
+                    <div style={{ fontSize: 14, opacity: 0.85, marginTop: 4 }}>Contact us to manage your subscription</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 8 }}>All features included</div>
@@ -2291,30 +2029,10 @@ export default function Dashboard() {
                 </div>
                 <div className="table-card">
                   <h3 className="table-card-title">Billing History</h3>
-                  <div className="responsive-table-wrapper">
-                    <table className="premium-table">
-                      <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Status</th><th>Receipt</th></tr></thead>
-                      <tbody>
-                        {[
-                          { date: '21 May 2026', desc: 'DashRx Pro – Monthly', amount: '£17.99', status: 'Paid' },
-                          { date: '21 Apr 2026', desc: 'DashRx Pro – Monthly', amount: '£17.99', status: 'Paid' },
-                          { date: '21 Mar 2026', desc: 'DashRx Pro – Monthly', amount: '£17.99', status: 'Paid' },
-                        ].map(r => (
-                          <tr key={r.date}>
-                            <td>{r.date}</td>
-                            <td>{r.desc}</td>
-                            <td style={{ fontWeight: 700 }}>{r.amount}</td>
-                            <td><span className="badge-pill badge-pill-success">✓ {r.status}</span></td>
-                            <td>
-                              <button className="btn-export" style={{ padding: '4px 10px', fontSize: 12 }}
-                                onClick={() => printPDF('DashRx Receipt', `<h1>DashRx Receipt</h1><p><strong>Date:</strong> ${r.date}</p><p><strong>Pharmacy:</strong> ${pharmacyName}</p><p><strong>ODS:</strong> ${odsCode}</p><p><strong>Amount:</strong> ${r.amount} (incl. VAT)</p><p><strong>Status:</strong> PAID</p>`)}>
-                                <Download size={12} /> Receipt
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+                    <div style={{ fontSize: 36, marginBottom: 12 }}>🧾</div>
+                    <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 6, color: 'var(--text-main)' }}>No billing records yet</div>
+                    <div style={{ fontSize: 13 }}>Your payment history will appear here once billing is set up.</div>
                   </div>
                 </div>
               </div>

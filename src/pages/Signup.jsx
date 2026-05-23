@@ -12,33 +12,11 @@ export default function Signup() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreed, setAgreed] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
 
   const navigate = useNavigate();
 
-  // Simulate auto-filling pharmacy name for UK stores (e.g. from ODS or NHS Contract code)
   const handleOdsChange = (e) => {
-    const val = e.target.value;
-    setOdsCode(val);
-
-    if (val.length >= 5) {
-      setIsSearching(true);
-      // Simulate API query latency
-      const timer = setTimeout(() => {
-        if (!pharmacyName) {
-          const upperVal = val.toUpperCase();
-          if (upperVal.startsWith('F') || upperVal.includes('LON')) {
-            setPharmacyName('Smiths Pharmacy, London');
-          } else if (upperVal.startsWith('M') || upperVal.includes('MAN')) {
-            setPharmacyName('Alliance Pharmacy, Manchester');
-          } else {
-            setPharmacyName('Boots Pharmacy, Birmingham');
-          }
-        }
-        setIsSearching(false);
-      }, 700);
-      return () => clearTimeout(timer);
-    }
+    setOdsCode(e.target.value);
   };
 
   // Real-time password requirement validators
@@ -136,7 +114,7 @@ export default function Signup() {
             {/* ODS / GSTIN Search */}
             <div className="signup-input-group">
               <label className="signup-label">
-                ODS Code or NHS Contract Number <span>(Search your pharmacy)</span>
+                ODS Code or NHS Contract Number
               </label>
               <input
                 type="text"
@@ -147,11 +125,7 @@ export default function Signup() {
                 style={{ textTransform: 'uppercase' }}
               />
               <p className="signup-helper-text">
-                {isSearching ? (
-                  <span style={{ color: 'var(--accent-color)', fontWeight: 'bold' }}>Searching databases and auto-filling details...</span>
-                ) : (
-                  'Enter your ODS Code and we\'ll auto-fill your pharmacy details'
-                )}
+                Enter your ODS Code or NHS Contract Number to associate it with your pharmacy.
               </p>
             </div>
 
